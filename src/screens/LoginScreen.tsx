@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useMutation } from 'convex/react';
+import { useMutation, useAction } from 'convex/react';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { api } from '../../convex/_generated/api';
 import { theme } from '../theme';
@@ -35,9 +35,9 @@ export default function LoginScreen({ onLogin }: Props) {
   const [appleAuthAvailable, setAppleAuthAvailable] = useState(false);
   const { t, language } = useTranslation();
 
-  const loginMutation = useMutation(api.users.login);
+  const loginMutation = useAction(api.users.login);
   const registerMutation = useMutation(api.users.register);
-  const loginWithAppleMutation = useMutation(api.users.loginWithApple);
+  const loginWithAppleMutation = useAction(api.users.loginWithApple);
 
   useEffect(() => {
     AppleAuthentication.isAvailableAsync().then(setAppleAuthAvailable);
@@ -58,10 +58,13 @@ export default function LoginScreen({ onLogin }: Props) {
             .join(' ')
         : undefined;
 
+      if (!credential.identityToken) {
+        throw new Error(t('login.somethingWentWrong'));
+      }
+
       setLoading(true);
       const { userId, sessionToken } = await loginWithAppleMutation({
-        appleId: credential.user,
-        email: credential.email || undefined,
+        identityToken: credential.identityToken,
         fullName: fullName || undefined,
         lang: language,
         client: 'app',
