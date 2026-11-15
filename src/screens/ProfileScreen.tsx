@@ -19,10 +19,9 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 interface ProfileProps {
   onSwitchToCompany: () => void;
-  onAdminReview?: () => void;
 }
 
-export default function ProfileScreen({ onSwitchToCompany, onAdminReview }: ProfileProps) {
+export default function ProfileScreen({ onSwitchToCompany }: ProfileProps) {
   const navigation = useNavigation<Nav>();
   const { userId, onLogout } = useUser();
   const { t, language, setLanguage } = useTranslation();
@@ -296,16 +295,6 @@ export default function ProfileScreen({ onSwitchToCompany, onAdminReview }: Prof
           <Text style={styles.switchBusinessText}>{t('profile.switchBusiness')}</Text>
         </TouchableOpacity>
 
-        {/* Admin Review — isAdmin from Convex OR known admin relay emails */}
-        {onAdminReview && (user.isAdmin || user.email === 'apple_001386.f@private.relay' || user.email === 'apple_001386.8@private.relay') && (
-          <TouchableOpacity
-            style={[styles.switchBusinessBtn, { marginTop: 10, borderColor: '#FFA726' }]}
-            onPress={onAdminReview}
-          >
-            <Ionicons name="shield-checkmark-outline" size={20} color="#FFA726" />
-            <Text style={[styles.switchBusinessText, { color: '#FFA726' }]}>{t('admin.title')}</Text>
-          </TouchableOpacity>
-        )}
       </ScrollView>
       {/* Edit Profile Modal */}
       <EditProfileModal

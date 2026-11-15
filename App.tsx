@@ -65,7 +65,6 @@ import CompanyAddBooking from './src/screens/company/CompanyAddBooking';
 import CompanyOnboarding from './src/screens/company/CompanyOnboarding';
 import CompanyPhotos from './src/screens/company/CompanyPhotos';
 import CompanyBilling from './src/screens/company/CompanyBilling';
-import AdminReview from './src/screens/AdminReview';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 /**
@@ -135,8 +134,7 @@ const DarkNavTheme = {
   },
 };
 
-function MainTabs({ onSwitchToCompany, onAdminReview }: { onSwitchToCompany: () => void; onAdminReview: () => void }) {
-  const { t } = useTranslation();
+function MainTabs({ onSwitchToCompany }: { onSwitchToCompany: () => void }) {  const { t } = useTranslation();
   return (
     <Tab.Navigator
       {...tabNavigatorProps}
@@ -182,14 +180,14 @@ function MainTabs({ onSwitchToCompany, onAdminReview }: { onSwitchToCompany: () 
           tabBarIcon: tabIcon('person.fill', 'person'),
         }}
       >
-        {() => <ProfileScreen onSwitchToCompany={onSwitchToCompany} onAdminReview={onAdminReview} />}
-      </Tab.Screen>
+{() => <ProfileScreen onSwitchToCompany={onSwitchToCompany} />}     
+ </Tab.Screen>
     </Tab.Navigator>
   );
 }
 
 export default function App() {
-  const [appState, setAppState] = useState<'splash' | 'login' | 'onboarding' | 'main' | 'company' | 'companyAuth' | 'companyOnboarding' | 'adminReview'>('splash');
+  const [appState, setAppState] = useState<'splash' | 'login' | 'onboarding' | 'main' | 'company' | 'companyAuth' | 'companyOnboarding'>('splash');
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [companyToken, setCompanyToken] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -386,21 +384,6 @@ export default function App() {
     );
   }
 
-  if (appState === 'adminReview') {
-    return (
-      <LanguageProvider>
-      <ConvexProvider client={convex}>
-        <UserProvider userId={userId} onLogout={handleLogout} onSwitchToCompany={handleSwitchToCompany}>
-        <View style={{ flex: 1, backgroundColor: theme.colors.bgPrimary }}>
-          <StatusBar style="light" />
-          <AdminReview onBack={() => setAppState('main')} />
-        </View>
-        </UserProvider>
-      </ConvexProvider>
-      </LanguageProvider>
-    );
-  }
-
   /* ── Notification watcher (must be inside ConvexProvider) ── */
   function NotificationWatcher({ userId, companyId }: { userId: string | null; companyId: string | null }) {
     useNotificationWatcher(userId, companyId);
@@ -521,7 +504,7 @@ export default function App() {
               ) : (
                 <>
                   <Stack.Screen name="MainTabs">
-                    {() => <MainTabs onSwitchToCompany={handleSwitchToCompany} onAdminReview={() => setAppState('adminReview')} />}
+                    {() => <MainTabs onSwitchToCompany={handleSwitchToCompany} />}
                   </Stack.Screen>
                   <Stack.Screen name="Notifications" component={NotificationsScreen} />
                   <Stack.Screen name="Friends" component={FriendsScreen} />
