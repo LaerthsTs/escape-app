@@ -5,6 +5,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../types';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { theme } from '../theme';
@@ -36,7 +38,7 @@ export default function PremiumScreen() {
     { icon: 'star-outline' as const, title: t('premium.benefitPartners'), desc: t('premium.benefitPartnersDesc'), color: theme.colors.gold },
     { icon: 'shield-checkmark-outline' as const, title: t('premium.benefitCommunity'), desc: t('premium.benefitCommunityDesc'), color: '#FFA726' },
   ];
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { userId } = useUser();
   const [selectedPlan, setSelectedPlan] = useState<'yearly' | 'monthly'>('yearly');
   const [subscribing, setSubscribing] = useState(false);
@@ -278,7 +280,7 @@ export default function PremiumScreen() {
                   <Text style={styles.saveText}>{t('premium.save50')}</Text>
                 </View>
                 <Text style={[styles.planPrice, selectedPlan === 'yearly' && styles.planPriceActive]}>
-                  {products.find(p => p.productId === IAP_PRODUCT_IDS.yearly)?.localizedPrice ?? '€29.99'}
+                  {products.find(p => p.id === IAP_PRODUCT_IDS.yearly)?.displayPrice ?? '€29.99'}
                 </Text>
                 <Text style={styles.planPeriod}>{t('premium.perYear')}</Text>
                 <Text style={styles.planPerMonth}>{t('premium.monthlyRate')}</Text>
@@ -293,7 +295,7 @@ export default function PremiumScreen() {
                 onPress={() => setSelectedPlan('monthly')}
               >
                 <Text style={[styles.planPrice, selectedPlan === 'monthly' && styles.planPriceActive]}>
-                  {products.find(p => p.productId === IAP_PRODUCT_IDS.monthly)?.localizedPrice ?? '€4.99'}
+                  {products.find(p => p.id === IAP_PRODUCT_IDS.monthly)?.displayPrice ?? '€4.99'}
                 </Text>
                 <Text style={styles.planPeriod}>{t('premium.perMonth')}</Text>
                 <Text style={styles.planPerMonth}>{t('premium.billedMonthly')}</Text>
@@ -334,11 +336,11 @@ export default function PremiumScreen() {
             {t('premium.autoRenewNotice')}
           </Text>
           <View style={styles.legalLinks}>
-            <TouchableOpacity onPress={() => navigation.navigate('TermsOfService' as any)}>
+            <TouchableOpacity onPress={() => navigation.navigate('TermsOfService')}>
               <Text style={styles.legalLink}>{t('premium.termsOfService')}</Text>
             </TouchableOpacity>
             <Text style={styles.legalDivider}>•</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('PrivacyPolicy' as any)}>
+            <TouchableOpacity onPress={() => navigation.navigate('PrivacyPolicy')}>
               <Text style={styles.legalLink}>{t('premium.privacyPolicy')}</Text>
             </TouchableOpacity>
           </View>
