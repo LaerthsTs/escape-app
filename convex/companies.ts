@@ -6,6 +6,7 @@ import { validateEmail, validatePassword, requireNonEmpty } from "./validation";
 import { nt } from "./notificationTexts";
 import { clampDepositPercent } from "./companyPaymentsData";
 import { normalizePlan } from "./plans";
+import { requireAdminSession } from "./adminSession";
 import {
   sessionTokenV,
   createCompanySession,
@@ -19,17 +20,6 @@ import {
 } from "./companySession";
 
 const clientV = v.optional(v.union(v.literal("web"), v.literal("app")));
-
-// ─── Admin helper: verify the calling user has isAdmin ───
-export const ADMIN_EMAILS = ['apple_001386.f@private.relay', 'apple_001386.8@private.relay', 'dstroumpakos@planeraai.app'];
-
-async function requireAdmin(ctx: any, userId: string) {
-  const user = await ctx.db.get(userId);
-  if (!user || (!user.isAdmin && !ADMIN_EMAILS.includes(user.email))) {
-    throw new Error("Unauthorized: admin access required");
-  }
-  return user;
-}
 
 // ─── Auth ───
 export const login = query({
@@ -830,10 +820,9 @@ export const redeemDiscountCode = internalMutation({
 });
 
 // Admin: list all pending review companies
-export const getPendingReview = query({
+export const getPendingReview = internalQuery({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx, args.userId);
     const all = await ctx.db.query("companies").collect();
     return all
       .filter((c) => c.onboardingStatus === "pending_review")
@@ -842,10 +831,9 @@ export const getPendingReview = query({
 });
 
 // Admin: list all companies for management
-export const getAllCompanies = query({
+export const getAllCompanies = internalQuery({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx, args.userId);
     const all = await ctx.db.query("companies").collect();
     return all.map(({ password: _pw, ...c }) => ({ ...c, onboardingStatus: c.onboardingStatus || "approved" }));
   },
@@ -853,10 +841,9 @@ export const getAllCompanies = query({
 
 // Admin: approve company
 export const approveCompany = mutation({
-  args: { companyId: v.id("companies"), adminEmail: v.string() },
+  args: { companyId: v.id("companies"), sessionToken: v.string() },
   handler: async (ctx, args) => {
-    const email = args.adminEmail.toLowerCase().trim();
-    if (!ADMIN_EMAILS.includes(email)) throw new Error("Unauthorized: admin access required");
+    await requireAdminSession(ctx, args.sessionToken);
     const company = await ctx.db.get(args.companyId);
     await ctx.db.patch(args.companyId, {
       onboardingStatus: "approved",
@@ -878,10 +865,9 @@ export const approveCompany = mutation({
 
 // Admin: decline company with notes
 export const declineCompany = mutation({
-  args: { companyId: v.id("companies"), notes: v.string(), adminEmail: v.string() },
+    args: { companyId: v.id("companies"), notes: v.string(), sessionToken: v.string() },
   handler: async (ctx, args) => {
-    const email = args.adminEmail.toLowerCase().trim();
-    if (!ADMIN_EMAILS.includes(email)) throw new Error("Unauthorized: admin access required");
+    await requireAdminSession(ctx, args.sessionToken);
     await ctx.db.patch(args.companyId, {
       onboardingStatus: "declined",
       reviewedAt: Date.now(),
@@ -1277,30 +1263,12 @@ export const updateBookingNotes = mutation({
   },
 });
 
-// ═══════════════════════════════════════════════════════════════
-// ADMIN — Platform-wide login & dashboard
-// ═══════════════════════════════════════════════════════════════
-
-/** Admin login — email-only, no password needed (email must be in ADMIN_EMAILS) */
-export const adminLogin = mutation({
-  args: { email: v.string() },
-  handler: async (ctx, args) => {
-    const email = args.email.toLowerCase().trim();
-    if (!ADMIN_EMAILS.includes(email)) {
-      throw new Error("Not an admin email");
-    }
-    return { email, isAdmin: true };
-  },
-});
 
 /** Full platform dashboard — returns every metric the admin needs */
 export const getAdminDashboard = query({
-  args: { adminEmail: v.string() },
+  args: { sessionToken: v.string() },
   handler: async (ctx, args) => {
-    const email = args.adminEmail.toLowerCase().trim();
-    if (!ADMIN_EMAILS.includes(email)) {
-      throw new Error("Unauthorized");
-    }
+    await requireAdminSession(ctx, args.sessionToken);
 
     // ── Companies ──
     const allCompanies = await ctx.db.query("companies").collect();
