@@ -134,7 +134,7 @@ export default function NotificationsScreen() {
                           try {
                             await acceptFriend({
                               friendshipId: notif.data.friendshipId,
-                              userId: userId as Id<'users'>,
+                              sessionToken: sessionToken as string,
                             });
                             handleMarkAsRead(notif._id);
                           } catch (e: any) {
@@ -151,7 +151,7 @@ export default function NotificationsScreen() {
                           try {
                             await declineFriend({
                               friendshipId: notif.data.friendshipId,
-                              userId: userId as Id<'users'>,
+                              sessionToken: sessionToken as string,
                             });
                             handleMarkAsRead(notif._id);
                           } catch (e: any) {
@@ -174,7 +174,7 @@ export default function NotificationsScreen() {
                           try {
                             await respondInvite({
                               inviteId: notif.data.bookingInviteId,
-                              userId: userId as Id<'users'>,
+                              sessionToken: sessionToken as string,
                               response: 'accepted',
                             });
                             handleMarkAsRead(notif._id);
@@ -192,7 +192,7 @@ export default function NotificationsScreen() {
                           try {
                             await respondInvite({
                               inviteId: notif.data.bookingInviteId,
-                              userId: userId as Id<'users'>,
+                              sessionToken: sessionToken as string,
                               response: 'declined',
                             });
                             handleMarkAsRead(notif._id);

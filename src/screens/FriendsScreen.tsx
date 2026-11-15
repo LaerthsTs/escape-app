@@ -17,22 +17,22 @@ type Tab = 'friends' | 'requests' | 'search';
 export default function FriendsScreen() {
   const navigation = useNavigation();
   const { t } = useTranslation();
-  const { userId } = useUser();
+  const { userId, sessionToken } = useUser();
   const [activeTab, setActiveTab] = useState<Tab>('friends');
   const [searchTerm, setSearchTerm] = useState('');
 
   const friends = useQuery(
     api.friends.listFriends,
-    userId ? { userId: userId as Id<'users'> } : 'skip',
+    sessionToken ? { sessionToken } : 'skip',
   );
   const pending = useQuery(
     api.friends.pendingRequests,
-    userId ? { userId: userId as Id<'users'> } : 'skip',
+    sessionToken ? { sessionToken } : 'skip',
   );
   const searchResults = useQuery(
     api.friends.searchUsers,
-    userId && searchTerm.trim().length >= 2
-      ? { currentUserId: userId as Id<'users'>, searchTerm }
+    sessionToken && searchTerm.trim().length >= 2
+      ? { sessionToken, searchTerm }
       : 'skip',
   );
 
@@ -128,7 +128,7 @@ export default function FriendsScreen() {
                             style: 'destructive',
                             onPress: () => removeFriend({
                               friendshipId: friend.friendshipId,
-                              userId: userId as Id<'users'>,
+                              sessionToken: sessionToken as string,
                             }),
                           },
                         ]
@@ -174,7 +174,7 @@ export default function FriendsScreen() {
                       style={styles.acceptBtn}
                       onPress={() => acceptRequest({
                         friendshipId: req.friendshipId,
-                        userId: userId as Id<'users'>,
+                        sessionToken: sessionToken as string,
                       })}
                     >
                       <Ionicons name="checkmark" size={18} color={theme.colors.bone} />
@@ -183,7 +183,7 @@ export default function FriendsScreen() {
                       style={styles.declineBtn}
                       onPress={() => declineRequest({
                         friendshipId: req.friendshipId,
-                        userId: userId as Id<'users'>,
+                        sessionToken: sessionToken as string,
                       })}
                     >
                       <Ionicons name="close" size={18} color={theme.colors.textMuted} />
@@ -265,7 +265,7 @@ export default function FriendsScreen() {
                       onPress={async () => {
                         try {
                           await sendRequest({
-                            requesterId: userId as Id<'users'>,
+                            sessionToken: sessionToken as string,
                             receiverId: user._id,
                           });
                           Alert.alert(t('success'), t('friends.requestSentSuccess'));

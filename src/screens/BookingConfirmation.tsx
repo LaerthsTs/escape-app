@@ -33,7 +33,7 @@ export default function BookingConfirmation() {
   const insets = useSafeAreaInsets();
   const { id, date, time, players, total, bookingCode, bookingId, paymentStatus } = route.params;
   const { t } = useTranslation();
-  const { userId } = useUser();
+  const { userId, sessionToken } = useUser();
   const [inviting, setInviting] = useState<string | null>(null);
 
   const convexRooms = useQuery(api.rooms.list);
@@ -43,11 +43,11 @@ export default function BookingConfirmation() {
   // Friend invite system
   const friends = useQuery(
     api.friends.listFriends,
-    userId ? { userId: userId as Id<'users'> } : 'skip',
+    sessionToken ? { sessionToken } : 'skip',
   );
   const sentInvites = useQuery(
     api.friends.getBookingInvitesByBooking,
-    bookingId ? { bookingId: bookingId as Id<'bookings'> } : 'skip',
+    bookingId && sessionToken ? { bookingId: bookingId as Id<'bookings'>, sessionToken } : 'skip',
   );
   const inviteToBooking = useMutation(api.friends.inviteToBooking);
 
@@ -250,7 +250,7 @@ export default function BookingConfirmation() {
                           try {
                             await inviteToBooking({
                               bookingId: bookingId as Id<'bookings'>,
-                              inviterId: userId as Id<'users'>,
+                              sessionToken: sessionToken as string,
                               inviteeId: friend._id as Id<'users'>,
                             });
                           } catch (e: any) {
