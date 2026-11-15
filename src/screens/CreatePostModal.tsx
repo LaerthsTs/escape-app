@@ -33,7 +33,7 @@ interface MediaItem {
 }
 
 export default function CreatePostModal({ visible, onClose }: Props) {
-  const { userId } = useUser();
+  const { userId, sessionToken } = useUser();
   const [text, setText] = useState('');
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [rating, setRating] = useState(0);
@@ -100,7 +100,7 @@ export default function CreatePostModal({ visible, onClose }: Props) {
       // Upload all media files
       const mediaStorageIds = await Promise.all(
         media.map(async (m) => {
-          const uploadUrl = await generateUploadUrl();
+          const uploadUrl = await generateUploadUrl({ sessionToken: sessionToken as string });
           const response = await fetch(m.uri);
           const blob = await response.blob();
           const uploadResponse = await fetch(uploadUrl, {
@@ -114,8 +114,7 @@ export default function CreatePostModal({ visible, onClose }: Props) {
       );
 
       await createPost({
-        authorType: 'user',
-        authorUserId: userId as Id<'users'>,
+        sessionToken: sessionToken as string,
         text: text.trim(),
         mediaStorageIds,
         rating: rating > 0 ? rating : undefined,

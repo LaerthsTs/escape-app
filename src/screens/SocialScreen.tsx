@@ -211,11 +211,11 @@ function PostCard({ post, isLiked, userId, onToggleLike, onComment, onReport, on
 /* ── Comment Sheet ── */
 function CommentSection({
   postId,
-  userId,
+  sessionToken,
   onClose,
 }: {
   postId: Id<'posts'>;
-  userId: string;
+  sessionToken: string;
   onClose: () => void;
 }) {
   const { t } = useTranslation();
@@ -230,7 +230,7 @@ function CommentSection({
     try {
       await addComment({
         postId,
-        userId: userId as Id<'users'>,
+        sessionToken,
         text: newComment.trim(),
       });
       setNewComment('');
@@ -317,15 +317,15 @@ function CommentSection({
 
 /* ── Main Screen ── */
 export default function SocialScreen() {
-  const { userId } = useUser();
+  const { userId, sessionToken } = useUser();
   const feed = useQuery(api.posts.getFeed);
   const userLikes = useQuery(
     api.posts.getUserLikes,
-    userId ? { userId: userId as Id<'users'> } : 'skip'
+    sessionToken ? { sessionToken } : 'skip'
   );
   const blockedUserIds = useQuery(
     api.moderation.getBlockedUserIds,
-    userId ? { userId: userId as Id<'users'> } : 'skip'
+    sessionToken ? { sessionToken } : 'skip'
   );
   const toggleLike = useMutation(api.posts.toggleLike);
   const reportPostMutation = useMutation(api.moderation.reportPost);
@@ -347,7 +347,7 @@ export default function SocialScreen() {
   const handleToggleLike = async (postId: Id<'posts'>) => {
     if (!userId) return;
     try {
-      await toggleLike({ postId, userId: userId as Id<'users'> });
+      await toggleLike({ postId, sessionToken: sessionToken as string });
     } catch (err: any) {
       Alert.alert('Error', err.message);
     }
@@ -381,7 +381,7 @@ export default function SocialScreen() {
             try {
               await reportPostMutation({
                 postId,
-                reporterId: userId as Id<'users'>,
+                sessionToken: sessionToken as string,
                 reason: reasons[buttonIndex - 1].value,
               });
               Alert.alert(t('social.reportSubmitted'), t('social.reportSubmittedMessage'));
@@ -403,7 +403,7 @@ export default function SocialScreen() {
               try {
                 await reportPostMutation({
                   postId,
-                  reporterId: userId as Id<'users'>,
+                  sessionToken: sessionToken as string,
                   reason: r.value,
                 });
                 Alert.alert(t('social.reportSubmitted'), t('social.reportSubmittedMessage'));
@@ -430,7 +430,7 @@ export default function SocialScreen() {
           onPress: async () => {
             try {
               await blockUserMutation({
-                blockerId: userId as Id<'users'>,
+                sessionToken: sessionToken as string,
                 blockedUserId: authorUserId as Id<'users'>,
               });
               Alert.alert(t('social.userBlocked'), t('social.userBlockedMessage'));
@@ -514,7 +514,7 @@ export default function SocialScreen() {
       />
 
       {/* Comment overlay */}
-      {commentPostId && userId && (
+      {commentPostId && sessionToken && (
         <View style={styles.commentOverlay}>
           <TouchableOpacity
             style={styles.commentBackdrop}
@@ -523,7 +523,7 @@ export default function SocialScreen() {
           />
           <CommentSection
             postId={commentPostId}
-            userId={userId}
+            sessionToken={sessionToken}
             onClose={() => setCommentPostId(null)}
           />
         </View>
