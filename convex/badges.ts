@@ -3,6 +3,7 @@ import { query, mutation, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { sessionTokenV, requireCompany } from "./companySession";
 import { requireUser, optionalUser } from "./userSession";
+import { merchOrderCount } from "./merch";
 
 // ═══════════════════════════════════════════════════════════════
 // Badge Definitions — the 8 UNLOCKED badges
@@ -17,6 +18,8 @@ export const BADGE_DEFS = [
   { key: "explorer",      icon: "🌍", threshold: 0  }, // dynamic: # of themes
   { key: "perfectionist", icon: "🎯", threshold: 10 },
   { key: "night_owl",     icon: "🌙", threshold: 10 },
+  // Awarded by merch.ts when a merch order is paid or collected; never by a company.
+  { key: "collector",     icon: "🛍️", threshold: 1  },
 ] as const;
 
 // ═══════════════════════════════════════════════════════════════
@@ -124,6 +127,7 @@ export const getUserBadges = query({
       explorer: explorerProgress,
       perfectionist: perfectionistProgress,
       night_owl: nightOwlProgress,
+      collector: await merchOrderCount(ctx, userId),
     };
 
     // Build result with all 8 badges
@@ -369,7 +373,7 @@ export const manualAwardBadges = mutation({
     }
 
     // Validate badge keys
-    const validKeys = new Set(BADGE_DEFS.map((d) => d.key as string));
+    const validKeys = new Set(BADGE_DEFS.map((d) => d.key as string).filter((k) => k !== "collector"));
     const keysToAward = args.badgeKeys.filter((k) => validKeys.has(k));
     if (keysToAward.length === 0) return;
 
