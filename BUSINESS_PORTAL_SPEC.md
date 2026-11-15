@@ -607,7 +607,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 ```
 
 ### Admin Access
-In the mobile app, admin access is controlled by the `isAdmin` boolean field on the `users` table in Convex. To grant admin access, set `isAdmin: true` on the user document via the Convex dashboard or the `users.setAdmin` mutation — **no app rebuild required**.
+In the mobile app, admin access is controlled by the `isAdmin` boolean field on the `users` table in Convex. To grant admin access, set `isAdmin: true` on the user document via the Convex dashboard, or by running the internal `users.setAdmin` mutation from a terminal (`npx convex run users:setAdmin '{"userId":"...","isAdmin":true}'`). It is not callable from the app or the web — **no app rebuild required**.
 
 Current admin emails:
 - `apple_001386.f@private.relay` (development)
