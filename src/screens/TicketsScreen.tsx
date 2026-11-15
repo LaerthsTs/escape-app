@@ -31,7 +31,7 @@ export default function TicketsScreen() {
   const cancelBooking = useMutation(api.bookings.cancel);
   const myRoomReports = useQuery(
     api.reports.myRoomReports,
-    userId ? { userId: userId as Id<"users"> } : 'skip',
+    sessionToken ? { sessionToken } : 'skip',
   );
   const [reporting, setReporting] = useState<any>(null);
 
@@ -287,10 +287,10 @@ export default function TicketsScreen() {
         )}
       </ScrollView>
 
-      {userId && (
+      {sessionToken && (
         <RoomReportModal
           visible={!!reporting}
-          userId={userId}
+          sessionToken={sessionToken}
           booking={reporting}
           onClose={() => setReporting(null)}
           onSent={() => {

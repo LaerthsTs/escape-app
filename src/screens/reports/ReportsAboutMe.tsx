@@ -14,9 +14,9 @@ import { reportErrorText } from './reportErrors';
 
 const AMBER = '#FFB74D';
 
-export default function ReportsAboutMe({ userId }: { userId: string }) {
+export default function ReportsAboutMe({ sessionToken }: { sessionToken: string }) {
   const { t } = useTranslation();
-  const standing = useQuery(api.reports.myStanding, { userId: userId as Id<'users'> });
+  const standing = useQuery(api.reports.myStanding, { sessionToken });
   if (!standing || !standing.active) return null;
 
   return (
@@ -32,14 +32,14 @@ export default function ReportsAboutMe({ userId }: { userId: string }) {
           : t('reports.me.expiresMany', { count: standing.gamesRemaining })}
       </Text>
       {standing.reports.map((r) => (
-        <ReportRow key={r._id} userId={userId} report={r} />
+        <ReportRow key={r._id} sessionToken={sessionToken} report={r} />
       ))}
       <Text style={styles.muted}>{t('reports.me.privacy')}</Text>
     </View>
   );
 }
 
-function ReportRow({ userId, report }: { userId: string; report: { _id: string; categories: string[]; reply: string | null } }) {
+function ReportRow({ sessionToken, report }: { sessionToken: string; report: { _id: string; categories: string[]; reply: string | null } }) {
   const { t } = useTranslation();
   const reply = useMutation(api.reports.replyToReport);
   const [editing, setEditing] = useState(false);
@@ -49,7 +49,7 @@ function ReportRow({ userId, report }: { userId: string; report: { _id: string; 
   const save = async () => {
     setSaving(true);
     try {
-      await reply({ userId: userId as Id<'users'>, reportId: report._id as Id<'playerReports'>, reply: text });
+      await reply({ sessionToken, reportId: report._id as Id<'playerReports'>, reply: text });
       setEditing(false);
     } catch (e) {
       Alert.alert(t('error'), reportErrorText(e, t));

@@ -151,7 +151,7 @@ export default function ProfileScreen({ onSwitchToCompany }: ProfileProps) {
         </View>
 
         {/* Reports businesses filed about this player (only while active) */}
-        <ReportsAboutMe userId={userId} />
+        {sessionToken && <ReportsAboutMe sessionToken={sessionToken} />}
 
         {/* Badges */}
         {badges && badges.length > 0 && (

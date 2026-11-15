@@ -20,13 +20,13 @@ type Kind = 'safety' | 'behaviour';
 
 export default function RoomReportModal({
   visible,
-  userId,
+  sessionToken,
   booking,
   onClose,
   onSent,
 }: {
   visible: boolean;
-  userId: string;
+  sessionToken: string;
   booking: { _id: string; date: string; time: string; room?: { title?: string } | null } | null;
   onClose: () => void;
   onSent: () => void;
@@ -68,7 +68,7 @@ export default function RoomReportModal({
     try {
       const ids: Id<'_storage'>[] = [];
       for (const uri of photos) {
-        const url = await generateUploadUrl({ userId: userId as Id<'users'> });
+        const url = await generateUploadUrl({ sessionToken });
         const blob = await (await fetch(uri)).blob();
         const res = await fetch(url, {
           method: 'POST',
@@ -80,7 +80,7 @@ export default function RoomReportModal({
         ids.push(storageId);
       }
       await submit({
-        userId: userId as Id<'users'>,
+        sessionToken,
         bookingId: booking._id as Id<'bookings'>,
         kind,
         description: text,
