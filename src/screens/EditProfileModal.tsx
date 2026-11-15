@@ -24,12 +24,13 @@ interface Props {
   visible: boolean;
   onClose: () => void;
   userId: string;
+  sessionToken: string;
   currentName: string;
   currentAvatar: string;
   currentPhone?: string;
 }
 
-export default function EditProfileModal({ visible, onClose, userId, currentName, currentAvatar, currentPhone }: Props) {
+export default function EditProfileModal({ visible, onClose, userId, sessionToken, currentName, currentAvatar, currentPhone }: Props) {
   const [name, setName] = useState(currentName);
   const [phone, setPhone] = useState(currentPhone || '');
   const [avatarUri, setAvatarUri] = useState(currentAvatar);
@@ -100,7 +101,7 @@ export default function EditProfileModal({ visible, onClose, userId, currentName
 
       // Upload new image if selected
       if (newImageSelected && avatarUri) {
-        const uploadUrl = await generateUploadUrl();
+        const uploadUrl = await generateUploadUrl({ sessionToken });
 
         const response = await fetch(avatarUri);
         const blob = await response.blob();
@@ -114,14 +115,14 @@ export default function EditProfileModal({ visible, onClose, userId, currentName
         const { storageId } = await uploadResponse.json();
 
         await updateProfile({
-          userId: userId as Id<"users">,
+          sessionToken,
           name: name.trim(),
           phone: phone.trim() || undefined,
           avatarStorageId: storageId as Id<"_storage">,
         });
       } else {
         await updateProfile({
-          userId: userId as Id<"users">,
+          sessionToken,
           name: name.trim(),
           phone: phone.trim() || undefined,
           ...(newImageSelected ? { avatar: '' } : {}),

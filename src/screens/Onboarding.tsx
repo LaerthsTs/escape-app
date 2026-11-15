@@ -14,9 +14,10 @@ const { width } = Dimensions.get('window');
 interface Props {
   onComplete: () => void;
   userId: string | null;
+  sessionToken: string | null;
 }
 
-export default function Onboarding({ onComplete, userId }: Props) {
+export default function Onboarding({ onComplete, userId, sessionToken }: Props) {
   const [step, setStep] = useState(0);
   const [selectedThemes, setSelectedThemes] = useState<string[]>([]);
   const [locationStatus, setLocationStatus] = useState<'idle' | 'requesting' | 'granted' | 'denied'>('idle');
@@ -57,10 +58,10 @@ export default function Onboarding({ onComplete, userId }: Props) {
         setLocationStatus('granted');
 
         // Save to user record
-        if (userId) {
+        if (sessionToken) {
           try {
             await updateLocation({
-              userId: userId as Id<'users'>,
+              sessionToken,
               latitude,
               longitude,
               city: city || undefined,

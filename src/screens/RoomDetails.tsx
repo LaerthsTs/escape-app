@@ -36,8 +36,8 @@ export default function RoomDetails() {
   const reviews = useQuery(api.reviews.getByRoom, room ? { roomId: room.id } : 'skip');
 
   // The heart saves the room to the player's wishlist (shown on Profile)
-  const { userId } = useUser();
-  const user = useQuery(api.users.getById, userId ? { userId: userId as Id<'users'> } : 'skip');
+  const { userId, sessionToken } = useUser();
+  const user = useQuery(api.users.getById, sessionToken ? { sessionToken } : 'skip');
   const toggleWishlist = useMutation(api.users.toggleWishlist);
   const liked = !!room && !!(user as any)?.wishlist?.includes(room.id);
   const [showAllReviews, setShowAllReviews] = useState(false);
@@ -105,7 +105,7 @@ export default function RoomDetails() {
           <TouchableOpacity
             style={[styles.squareBtn, { top: insets.top + 8, right: 20 }]}
             onPress={() => {
-              if (userId) toggleWishlist({ userId: userId as Id<'users'>, roomId: room.id }).catch(() => {});
+              if (sessionToken) toggleWishlist({ sessionToken, roomId: room.id }).catch(() => {});
             }}
             accessibilityRole="button"
             accessibilityLabel={t('profile.wishlist')}

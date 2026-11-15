@@ -20,12 +20,12 @@ const LanguageContext = createContext<LanguageContextType>({
 /** Fire-and-forget language sync to Convex DB */
 async function syncLanguageToDB(lang: Language) {
   try {
-    const userId = await AsyncStorage.getItem('userId');
-    if (!userId) return;
+    const sessionToken = await AsyncStorage.getItem('sessionToken');
+    if (!sessionToken) return;
     await fetch(`${CONVEX_URL}/updateLanguage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, language: lang }),
+      body: JSON.stringify({ sessionToken, language: lang }),
     });
   } catch {
     // silent – best-effort sync

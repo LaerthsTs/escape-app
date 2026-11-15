@@ -45,7 +45,7 @@ export default function Checkout() {
   const { id, date, time, players, total: routeTotal } = route.params;
 
   const { t } = useTranslation();
-  const { userId } = useUser();
+  const { userId, sessionToken } = useUser();
   const createBooking = useMutation(api.bookings.create);
   const cancelBooking = useMutation(api.bookings.cancel);
   const startCheckout = useAction(api.companyPayments.startCheckout);
@@ -56,7 +56,7 @@ export default function Checkout() {
   const [savingPhone, setSavingPhone] = useState(false);
 
   // Fetch user to check phone
-  const convexUser = useQuery(api.users.getById, userId ? { userId: userId as any } : "skip");
+  const convexUser = useQuery(api.users.getById, sessionToken ? { sessionToken } : "skip");
   const userHasPhone = !!(convexUser as any)?.phone;
 
   const room = useQuery(api.rooms.getById, { id: id as Id<'rooms'> });
@@ -475,7 +475,7 @@ export default function Checkout() {
                   if (!phoneInput.trim()) return;
                   setSavingPhone(true);
                   try {
-                    await updateProfile({ userId: userId as any, phone: phoneInput.trim() });
+                    await updateProfile({ sessionToken: sessionToken as string, phone: phoneInput.trim() });
                   } catch (e: any) {
                     Alert.alert(t('error'), e.message);
                   } finally {

@@ -23,13 +23,13 @@ interface ProfileProps {
 
 export default function ProfileScreen({ onSwitchToCompany }: ProfileProps) {
   const navigation = useNavigation<Nav>();
-  const { userId, onLogout } = useUser();
+  const { userId, sessionToken, onLogout } = useUser();
   const { t, language, setLanguage } = useTranslation();
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
   const user = useQuery(
     api.users.getById,
-    userId ? { userId: userId as Id<"users"> } : "skip"
+    sessionToken ? { sessionToken } : "skip"
   );
   const premiumStatus = useQuery(
     api.premium.getStatus,
@@ -200,7 +200,7 @@ export default function ProfileScreen({ onSwitchToCompany }: ProfileProps) {
                 hitSlop={10}
                 accessibilityRole="button"
                 accessibilityLabel={t('profile.wishlistRemoved', { title: room.title })}
-                onPress={() => toggleWishlist({ userId: userId as Id<"users">, roomId: room.id }).catch(() => {})}
+                onPress={() => toggleWishlist({ sessionToken: sessionToken as string, roomId: room.id }).catch(() => {})}
               >
                 <Ionicons name="heart" size={22} color={theme.colors.redPrimary} />
               </TouchableOpacity>
@@ -236,7 +236,7 @@ export default function ProfileScreen({ onSwitchToCompany }: ProfileProps) {
                   onPress: async () => {
                     try {
                       setDeletingAccount(true);
-                      await deleteAccountMutation({ userId: userId as Id<"users"> });
+                      await deleteAccountMutation({ sessionToken: sessionToken as string });
                       await AsyncStorage.clear();
                       onLogout();
                     } catch (e: any) {
@@ -301,6 +301,7 @@ export default function ProfileScreen({ onSwitchToCompany }: ProfileProps) {
         visible={editModalVisible}
         onClose={() => setEditModalVisible(false)}
         userId={userId!}
+        sessionToken={sessionToken!}
         currentName={user.name}
         currentAvatar={user.avatar}
         currentPhone={(user as any).phone || ''}

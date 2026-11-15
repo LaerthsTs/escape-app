@@ -63,11 +63,11 @@ const darkMapStyle = Platform.OS === 'android' ? [
 export default function DiscoverScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
-  const { userId } = useUser();
+  const { userId, sessionToken } = useUser();
   const { t } = useTranslation();
   const user = useQuery(
     api.users.getById,
-    userId ? { userId: userId as Id<'users'> } : 'skip'
+    sessionToken ? { sessionToken } : 'skip'
   );
 
   const convexRooms = useQuery(

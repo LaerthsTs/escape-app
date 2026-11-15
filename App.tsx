@@ -192,6 +192,7 @@ export default function App() {
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [companyToken, setCompanyToken] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
   // Required by file so only these three weights ship, not the whole family
   const [fontsLoaded, fontError] = useFonts({
     NotoSerifDisplay_700Bold: require('@expo-google-fonts/noto-serif-display/700Bold/NotoSerifDisplay_700Bold.ttf'),
@@ -204,6 +205,7 @@ export default function App() {
     Promise.all([AsyncStorage.getItem('userId'), AsyncStorage.getItem('sessionToken')]).then(([storedUserId, storedToken]) => {
       if (storedUserId && storedToken) {
         setUserId(storedUserId);
+        setSessionToken(storedToken);
       } else if (storedUserId) {
         // Logged in before server sessions existed: ask for a fresh login
         AsyncStorage.removeItem('userId');
@@ -232,6 +234,7 @@ export default function App() {
     await AsyncStorage.setItem('userId', id);
     await AsyncStorage.setItem('sessionToken', sessionToken);
     setUserId(id);
+    setSessionToken(sessionToken);
     setCrashUser(id);
     const hasOnboarded = await AsyncStorage.getItem('hasOnboarded');
     setAppState(hasOnboarded ? 'main' : 'onboarding');
@@ -243,6 +246,7 @@ export default function App() {
     await AsyncStorage.removeItem('sessionToken');
     await AsyncStorage.removeItem('userId');
     setUserId(null);
+    setSessionToken(null);
     setCrashUser(null);
     setAppState('login');
   };
@@ -290,6 +294,7 @@ export default function App() {
               const storedUserId = await AsyncStorage.getItem('userId');
               if (storedUserId) {
                 setUserId(storedUserId);
+                setSessionToken(await AsyncStorage.getItem('sessionToken'));
                 setAppState('main');
               } else {
                 setAppState('login');
@@ -324,7 +329,7 @@ export default function App() {
           <Onboarding onComplete={async () => {
             await AsyncStorage.setItem('hasOnboarded', 'true');
             setAppState('main');
-          }} userId={userId} />
+          }} userId={userId} sessionToken={sessionToken} />
         </View>
       </ConvexProvider>
       </LanguageProvider>
@@ -379,6 +384,7 @@ export default function App() {
               const storedUserId = await AsyncStorage.getItem('userId');
               if (storedUserId) {
                 setUserId(storedUserId);
+                setSessionToken(await AsyncStorage.getItem('sessionToken'));
                 setAppState('main');
               } else {
                 setAppState('login');
@@ -416,6 +422,7 @@ export default function App() {
             const storedUserId = await AsyncStorage.getItem('userId');
             if (storedUserId) {
               setUserId(storedUserId);
+              setSessionToken(await AsyncStorage.getItem('sessionToken'));
               setAppState('main');
             } else {
               setAppState('login');
@@ -448,6 +455,7 @@ export default function App() {
                 const storedUserId = await AsyncStorage.getItem('userId');
                 if (storedUserId) {
                   setUserId(storedUserId);
+                  setSessionToken(await AsyncStorage.getItem('sessionToken'));
                   setAppState('main');
                 } else {
                   setAppState('login');
@@ -460,6 +468,7 @@ export default function App() {
                 const storedUserId = await AsyncStorage.getItem('userId');
                 if (storedUserId) {
                   setUserId(storedUserId);
+                  setSessionToken(await AsyncStorage.getItem('sessionToken'));
                   setAppState('main');
                 } else {
                   setAppState('login');
@@ -476,7 +485,7 @@ export default function App() {
     <ErrorBoundary>
     <LanguageProvider>
     <ConvexProvider client={convex}>
-      <UserProvider userId={userId} onLogout={handleLogout} onSwitchToCompany={handleSwitchToCompany}>
+      <UserProvider userId={userId} sessionToken={sessionToken} onLogout={handleLogout} onSwitchToCompany={handleSwitchToCompany}>
       <CompanySessionProvider token={companyToken} onExpired={handleCompanySessionExpired}>
         <View style={{ flex: 1 }}>
           <StatusBar style="light" />
