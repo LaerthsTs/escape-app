@@ -161,7 +161,7 @@ export default function Checkout() {
 
   const startOnlinePayment = async (terms: 'full' | 'deposit_20') => {
     const base = {
-      userId: userId as Id<'users'>,
+      sessionToken: sessionToken as string,
       roomId: id as Id<'rooms'>,
       date,
       time,
@@ -196,7 +196,7 @@ export default function Checkout() {
       if (isPayOnArrival) {
         // Pay at the venue: booking is created without any payment.
         const result = await createBooking({
-          userId: userId as Id<'users'>,
+          sessionToken: sessionToken as string,
           roomId: id as Id<'rooms'>,
           date,
           time,
@@ -251,7 +251,7 @@ export default function Checkout() {
     try {
       const r = await confirmReturn({ bookingId: pending.bookingId as Id<'bookings'> }).catch(() => null);
       if (r?.state === 'paid' || isPaidRef.current) return; // the effect above navigates
-      await cancelBooking({ id: pending.bookingId as Id<'bookings'> });
+      await cancelBooking({ id: pending.bookingId as Id<'bookings'>, sessionToken: sessionToken as string });
       setPending(null);
       setNotSeen(false);
     } catch (e: any) {

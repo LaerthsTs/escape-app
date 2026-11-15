@@ -399,8 +399,8 @@ export default function App() {
   }
 
   /* ── Notification watcher (must be inside ConvexProvider) ── */
-  function NotificationWatcher({ userId, companyId }: { userId: string | null; companyId: string | null }) {
-    useNotificationWatcher(userId, companyId);
+  function NotificationWatcher({ userId, companyId, sessionToken }: { userId: string | null; companyId: string | null; sessionToken: string | null }) {
+    useNotificationWatcher(userId, companyId, sessionToken);
     return null;
   }
 
@@ -489,7 +489,7 @@ export default function App() {
       <CompanySessionProvider token={companyToken} onExpired={handleCompanySessionExpired}>
         <View style={{ flex: 1 }}>
           <StatusBar style="light" />
-          <NotificationWatcher userId={userId} companyId={companyId} />
+          <NotificationWatcher userId={userId} companyId={companyId} sessionToken={sessionToken} />
           <NavigationContainer ref={navigationRef} theme={DarkNavTheme}>
             <Stack.Navigator
               screenOptions={{

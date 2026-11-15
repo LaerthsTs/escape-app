@@ -26,7 +26,7 @@ import { useTranslation } from './i18n';
  *
  * Must be rendered inside a <ConvexProvider>.
  */
-export function useNotificationWatcher(userId: string | null, companyId: string | null) {
+export function useNotificationWatcher(userId: string | null, companyId: string | null, sessionToken: string | null) {
   const createNotification = useMutation(api.notifications.create);
   const { t } = useTranslation();
   // ── Watch rooms ──
@@ -86,7 +86,7 @@ export function useNotificationWatcher(userId: string | null, companyId: string 
   // ── Watch bookings for the current user ──
   const bookings = useQuery(
     api.bookings.getByUser,
-    userId ? { userId: userId as any } : 'skip',
+    sessionToken ? { sessionToken } : 'skip',
   );
   const bookingsInitialised = useRef(false);
 

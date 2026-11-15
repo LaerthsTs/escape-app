@@ -22,11 +22,11 @@ function formatDisplayDate(iso: string): string {
 export default function TicketsScreen() {
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
   const { t } = useTranslation();
-  const { userId } = useUser();
+  const { userId, sessionToken } = useUser();
 
   const bookings = useQuery(
     api.bookings.getByUser,
-    userId ? { userId: userId as Id<"users"> } : 'skip',
+    sessionToken ? { sessionToken } : 'skip',
   );
   const cancelBooking = useMutation(api.bookings.cancel);
   const myRoomReports = useQuery(
@@ -61,7 +61,7 @@ export default function TicketsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await cancelBooking({ id: booking._id });
+              await cancelBooking({ id: booking._id, sessionToken: sessionToken as string });
               Alert.alert(t('tickets.cancelled'), t('tickets.cancelledMsg'));
             } catch {
               Alert.alert(t('error'), t('tickets.cancelFailed'));
