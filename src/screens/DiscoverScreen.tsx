@@ -72,7 +72,7 @@ export default function DiscoverScreen() {
 
   const convexRooms = useQuery(
     api.premium.getVisibleRooms,
-    userId ? { userId: userId as Id<'users'> } : {}
+    sessionToken ? { sessionToken } : {}
   );
   const rooms = (convexRooms ?? []).map((r: any) => ({ ...r, id: r._id }));
 

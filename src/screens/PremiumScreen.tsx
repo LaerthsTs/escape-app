@@ -39,7 +39,7 @@ export default function PremiumScreen() {
     { icon: 'shield-checkmark-outline' as const, title: t('premium.benefitCommunity'), desc: t('premium.benefitCommunityDesc'), color: '#FFA726' },
   ];
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { userId } = useUser();
+  const { userId, sessionToken } = useUser();
   const [selectedPlan, setSelectedPlan] = useState<'yearly' | 'monthly'>('yearly');
   const [subscribing, setSubscribing] = useState(false);
   const [restoring, setRestoring] = useState(false);
@@ -47,7 +47,7 @@ export default function PremiumScreen() {
 
   const premiumStatus = useQuery(
     api.premium.getStatus,
-    userId ? { userId: userId as Id<"users"> } : 'skip'
+    sessionToken ? { sessionToken } : 'skip'
   );
   const subscribeWithIAP = useMutation(api.premium.subscribeWithIAP);
   const restoreWithIAP = useMutation(api.premium.restoreWithIAP);
@@ -58,6 +58,8 @@ export default function PremiumScreen() {
   // Keep a ref to userId so purchase listener always has the latest value
   const userIdRef = useRef(userId);
   useEffect(() => { userIdRef.current = userId; }, [userId]);
+  const sessionTokenRef = useRef(sessionToken);
+  useEffect(() => { sessionTokenRef.current = sessionToken; }, [sessionToken]);
 
   // ─── Initialize IAP & purchase listeners ───
   useEffect(() => {
@@ -71,15 +73,15 @@ export default function PremiumScreen() {
 
       // Listen for successful purchases
       purchaseSub = onPurchaseUpdated(async (purchase) => {
-        const currentUserId = userIdRef.current;
-        if (!currentUserId) return;
+        const currentToken = sessionTokenRef.current;
+        if (!userIdRef.current || !currentToken) return;
 
         const receipt = extractReceiptData(purchase);
         const plan = purchase.productId === IAP_PRODUCT_IDS.yearly ? 'yearly' : 'monthly';
 
         try {
           await subscribeWithIAP({
-            userId: currentUserId as Id<"users">,
+            sessionToken: currentToken,
             plan,
             productId: receipt.productId,
             transactionId: receipt.transactionId,
@@ -153,7 +155,7 @@ export default function PremiumScreen() {
 
       const receipt = extractReceiptData(premiumPurchase);
       await restoreWithIAP({
-        userId: userId as Id<"users">,
+        sessionToken: sessionToken as string,
         productId: receipt.productId,
         transactionId: receipt.transactionId,
         platform: receipt.platform,
@@ -177,7 +179,7 @@ export default function PremiumScreen() {
           text: t('premium.cancel'), style: 'destructive',
           onPress: async () => {
             try {
-              const result = await cancelPremium({ userId: userId as Id<"users"> });
+              const result = await cancelPremium({ sessionToken: sessionToken as string });
               Alert.alert(t('premium.cancelled'), t('premium.cancelledMessage'));
             } catch (e: any) {
               Alert.alert(t('premium.error'), e.message || t('premium.cancelledMessage'));

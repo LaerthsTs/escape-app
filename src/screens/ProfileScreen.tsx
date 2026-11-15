@@ -33,7 +33,7 @@ export default function ProfileScreen({ onSwitchToCompany }: ProfileProps) {
   );
   const premiumStatus = useQuery(
     api.premium.getStatus,
-    userId ? { userId: userId as Id<"users"> } : "skip"
+    sessionToken ? { sessionToken } : "skip"
   );
   const convexRooms = useQuery(api.rooms.list);
   const deleteAccountMutation = useMutation(api.users.deleteAccount);

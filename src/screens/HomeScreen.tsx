@@ -68,7 +68,7 @@ export default function HomeScreen() {
   const tabNavigation = useNavigation<TabNav>();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
-  const { userId } = useUser();
+  const { userId, sessionToken } = useUser();
   const unreadCount = useQuery(
     api.notifications.unreadCount,
     userId ? { userId: userId as Id<"users"> } : 'skip',
@@ -79,11 +79,11 @@ export default function HomeScreen() {
   const allRooms = useQuery(api.rooms.list);
   const premiumStatus = useQuery(
     api.premium.getStatus,
-    userId ? { userId: userId as Id<"users"> } : 'skip',
+    sessionToken ? { sessionToken } : 'skip',
   );
   const earlyAccessRooms = useQuery(
     api.premium.getEarlyAccessRooms,
-    userId && premiumStatus?.isPremium ? { userId: userId as Id<"users"> } : 'skip',
+    sessionToken && premiumStatus?.isPremium ? { sessionToken } : 'skip',
   );
 
   // Device location state
