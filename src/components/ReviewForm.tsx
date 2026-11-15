@@ -12,11 +12,11 @@ import { PrimaryButton } from './ui';
  * "Write a review" for a room, shown only to players with a completed booking
  * they have not reviewed yet (the same rule the website uses).
  */
-export function ReviewForm({ userId, roomId }: { userId: string | null; roomId: string }) {
+export function ReviewForm({ userId, sessionToken, roomId }: { userId: string | null; sessionToken: string | null; roomId: string }) {
   const { t } = useTranslation();
   const eligibility = useQuery(
     api.reviews.canReview,
-    userId ? { userId: userId as Id<'users'>, roomId: roomId as Id<'rooms'> } : 'skip',
+    sessionToken ? { sessionToken, roomId: roomId as Id<'rooms'> } : 'skip',
   );
   const submitReview = useMutation(api.reviews.submit);
 
@@ -52,7 +52,7 @@ export function ReviewForm({ userId, roomId }: { userId: string | null; roomId: 
     setFailed(false);
     try {
       await submitReview({
-        userId: userId as Id<'users'>,
+        sessionToken: sessionToken as string,
         roomId: roomId as Id<'rooms'>,
         bookingId: eligibility.bookingId as Id<'bookings'>,
         rating,

@@ -45,7 +45,7 @@ export default function ProfileScreen({ onSwitchToCompany }: ProfileProps) {
   // All eight badges with progress, the same data the website's profile shows
   const badges = useQuery(
     api.badges.getUserBadges,
-    userId ? { userId: userId as Id<"users"> } : "skip"
+    sessionToken ? { sessionToken } : "skip"
   );
 
   if (!userId || user === undefined) {

@@ -40,11 +40,11 @@ function timeAgo(ts: number): string {
 export default function NotificationsScreen() {
   const navigation = useNavigation();
   const { t } = useTranslation();
-  const { userId } = useUser();
+  const { userId, sessionToken } = useUser();
 
   const notifications = useQuery(
     api.notifications.getByUser,
-    userId ? { userId: userId as Id<"users"> } : 'skip',
+    sessionToken ? { sessionToken } : 'skip',
   );
   const markAsReadMut = useMutation(api.notifications.markAsRead);
   const markAllReadMut = useMutation(api.notifications.markAllRead);
@@ -56,12 +56,12 @@ export default function NotificationsScreen() {
 
   const handleMarkAllRead = () => {
     if (userId) {
-      markAllReadMut({ userId: userId as Id<"users"> });
+      markAllReadMut({ sessionToken: sessionToken as string });
     }
   };
 
   const handleMarkAsRead = (id: Id<"notifications">) => {
-    markAsReadMut({ id });
+    markAsReadMut({ id, sessionToken: sessionToken as string });
   };
 
   if (!userId || notifications === undefined) {

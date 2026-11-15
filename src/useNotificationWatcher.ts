@@ -69,7 +69,7 @@ export function useNotificationWatcher(userId: string | null, companyId: string 
 
         if (userId) {
           await createNotification({
-            userId: userId as Id<"users">,
+            sessionToken: sessionToken as string,
             type: 'system',
             title,
             message: body,
@@ -125,7 +125,7 @@ export function useNotificationWatcher(userId: string | null, companyId: string 
         );
         if (userId) {
           await createNotification({
-            userId: userId as Id<"users">,
+            sessionToken: sessionToken as string,
             type: 'booking',
             title,
             message: body,
@@ -149,7 +149,7 @@ export function useNotificationWatcher(userId: string | null, companyId: string 
           );
           if (userId) {
             await createNotification({
-              userId: userId as Id<"users">,
+              sessionToken: sessionToken as string,
               type: 'cancelled',
               title,
               message: body,
@@ -242,7 +242,7 @@ export function useNotificationWatcher(userId: string | null, companyId: string 
   // ── Watch slot alerts: notify when a watched unavailable slot becomes available ──
   const notifiedAlerts = useQuery(
     api.slotAlerts.getNotifiedByUser,
-    userId ? { userId: userId as Id<"users"> } : 'skip',
+    sessionToken ? { sessionToken } : 'skip',
   );
   const deleteNotifiedAlerts = useMutation(api.slotAlerts.deleteNotified);
   const slotAlertsInitialised = useRef(false);
@@ -253,7 +253,7 @@ export function useNotificationWatcher(userId: string | null, companyId: string 
     if (!slotAlertsInitialised.current) {
       // First run – delete any stale notified alerts without sending notifications
       if (notifiedAlerts.length > 0) {
-        deleteNotifiedAlerts({ ids: notifiedAlerts.map((a: any) => a._id) });
+        deleteNotifiedAlerts({ ids: notifiedAlerts.map((a: any) => a._id), sessionToken: sessionToken as string });
       }
       slotAlertsInitialised.current = true;
       return;
@@ -272,7 +272,7 @@ export function useNotificationWatcher(userId: string | null, companyId: string 
         );
         if (userId) {
           await createNotification({
-            userId: userId as Id<"users">,
+            sessionToken: sessionToken as string,
             type: 'slot_available',
             title,
             message: body,
@@ -281,7 +281,7 @@ export function useNotificationWatcher(userId: string | null, companyId: string 
         }
       }
       // Clean up — delete those alerts so we don't re-notify
-      await deleteNotifiedAlerts({ ids: notifiedAlerts.map((a: any) => a._id) });
+      await deleteNotifiedAlerts({ ids: notifiedAlerts.map((a: any) => a._id), sessionToken: sessionToken as string });
     })();
   }, [notifiedAlerts, userId]);
 }

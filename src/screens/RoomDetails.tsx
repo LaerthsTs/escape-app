@@ -223,7 +223,7 @@ export default function RoomDetails() {
               {reviews && reviews.length > 0 ? <Text style={styles.reviewCount}>  ({reviews.length})</Text> : null}
             </Text>
 
-            <ReviewForm userId={userId} roomId={room.id} />
+            <ReviewForm userId={userId} sessionToken={sessionToken} roomId={room.id} />
 
             {!reviews ? (
               <ActivityIndicator color={theme.colors.redPrimary} style={{ paddingVertical: 20 }} />

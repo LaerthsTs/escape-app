@@ -24,7 +24,7 @@ export default function DateTimeSelect() {
   const roomId = route.params.id;
 
   const { t } = useTranslation();
-  const { userId } = useUser();
+  const { userId, sessionToken } = useUser();
 
   const convexRooms = useQuery(api.rooms.list);
   const allRooms = (convexRooms ?? []).map((r: any) => ({ ...r, id: r._id }));
@@ -132,8 +132,8 @@ export default function DateTimeSelect() {
   // ── Slot alerts: let users subscribe to unavailable slots ──
   const slotAlerts = useQuery(
     api.slotAlerts.getByUserRoomDate,
-    userId && room._id
-      ? { userId: userId as Id<"users">, roomId: room._id as Id<"rooms">, date: dateStr }
+    sessionToken && room._id
+      ? { sessionToken, roomId: room._id as Id<"rooms">, date: dateStr }
       : 'skip',
   );
   const toggleAlert = useMutation(api.slotAlerts.toggle);
@@ -150,7 +150,7 @@ export default function DateTimeSelect() {
     }
     if (!room._id) return;
     const result = await toggleAlert({
-      userId: userId as Id<"users">,
+      sessionToken: sessionToken as string,
       roomId: room._id as Id<"rooms">,
       date: dateStr,
       time: slotTime,

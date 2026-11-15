@@ -71,7 +71,7 @@ export default function HomeScreen() {
   const { userId, sessionToken } = useUser();
   const unreadCount = useQuery(
     api.notifications.unreadCount,
-    userId ? { userId: userId as Id<"users"> } : 'skip',
+    sessionToken ? { sessionToken } : 'skip',
   ) ?? 0;
 
   // Server queries
