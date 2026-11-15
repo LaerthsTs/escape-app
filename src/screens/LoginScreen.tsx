@@ -21,7 +21,7 @@ import { EyeKeyhole } from '../components/EyeKeyhole';
 import { useTranslation } from '../i18n';
 
 interface Props {
-  onLogin: (userId: string) => void;
+  onLogin: (userId: string, sessionToken: string) => void;
 }
 
 export default function LoginScreen({ onLogin }: Props) {
@@ -59,13 +59,14 @@ export default function LoginScreen({ onLogin }: Props) {
         : undefined;
 
       setLoading(true);
-      const userId = await loginWithAppleMutation({
+      const { userId, sessionToken } = await loginWithAppleMutation({
         appleId: credential.user,
         email: credential.email || undefined,
         fullName: fullName || undefined,
         lang: language,
+        client: 'app',
       });
-      onLogin(userId);
+      onLogin(userId, sessionToken);
     } catch (err: any) {
       if (err.code !== 'ERR_REQUEST_CANCELED') {
         Alert.alert(t('login.appleSignInFailed'), err.message || t('login.somethingWentWrong'));
@@ -99,19 +100,21 @@ export default function LoginScreen({ onLogin }: Props) {
     setLoading(true);
     try {
       if (isRegister) {
-        const userId = await registerMutation({
+        const { userId, sessionToken } = await registerMutation({
           name: name.trim(),
           email: email.trim().toLowerCase(),
           password,
           lang: language,
+          client: 'app',
         });
-        onLogin(userId);
+        onLogin(userId, sessionToken);
       } else {
-        const userId = await loginMutation({
+        const { userId, sessionToken } = await loginMutation({
           email: email.trim().toLowerCase(),
           password,
+          client: 'app',
         });
-        onLogin(userId);
+        onLogin(userId, sessionToken);
       }
     } catch (err: any) {
       Alert.alert(t('error'), err.message || t('login.somethingWentWrong'));

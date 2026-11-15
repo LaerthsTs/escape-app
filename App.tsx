@@ -11,6 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootStackParamList, MainTabParamList, CompanyTabParamList } from './src/types';
 import { theme } from './src/theme';
 import { convex } from './src/convex';
+import { api } from './convex/_generated/api';
 import {
   CompanySessionProvider,
   saveCompanySession,
@@ -200,9 +201,12 @@ export default function App() {
 
   // Check for existing session on app launch
   useEffect(() => {
-    AsyncStorage.getItem('userId').then((storedUserId) => {
-      if (storedUserId) {
+    Promise.all([AsyncStorage.getItem('userId'), AsyncStorage.getItem('sessionToken')]).then(([storedUserId, storedToken]) => {
+      if (storedUserId && storedToken) {
         setUserId(storedUserId);
+      } else if (storedUserId) {
+        // Logged in before server sessions existed: ask for a fresh login
+        AsyncStorage.removeItem('userId');
       }
     });
   }, []);
@@ -224,8 +228,9 @@ export default function App() {
     return () => sub.remove();
   }, []);
 
-  const handleLogin = async (id: string) => {
+  const handleLogin = async (id: string, sessionToken: string) => {
     await AsyncStorage.setItem('userId', id);
+    await AsyncStorage.setItem('sessionToken', sessionToken);
     setUserId(id);
     setCrashUser(id);
     const hasOnboarded = await AsyncStorage.getItem('hasOnboarded');
@@ -233,6 +238,9 @@ export default function App() {
   };
 
   const handleLogout = async () => {
+    const token = await AsyncStorage.getItem('sessionToken');
+    if (token) convex.mutation(api.userSession.logout, { sessionToken: token }).catch(() => {});
+    await AsyncStorage.removeItem('sessionToken');
     await AsyncStorage.removeItem('userId');
     setUserId(null);
     setCrashUser(null);
