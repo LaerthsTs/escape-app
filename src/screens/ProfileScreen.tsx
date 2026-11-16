@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { clearAllTokens } from '../secureTokens';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { theme } from '../theme';
@@ -238,6 +239,7 @@ export default function ProfileScreen({ onSwitchToCompany }: ProfileProps) {
                       setDeletingAccount(true);
                       await deleteAccountMutation({ sessionToken: sessionToken as string });
                       await AsyncStorage.clear();
+                      await clearAllTokens();
                       onLogout();
                     } catch (e: any) {
                       Alert.alert(t('error'), e.message || 'Failed to delete account');

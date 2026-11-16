@@ -1,13 +1,14 @@
 /**
  * Business-portal session for the app (see convex/companySession.ts).
  *
- * loginCompany/register return a sessionToken. We keep it in AsyncStorage next
- * to the companyId, and the hooks below add it to every company-scoped call.
+ * loginCompany/register return a sessionToken. We keep it in secure storage
+ * (secureTokens.ts) and the companyId in AsyncStorage, and the hooks below add it to every company-scoped call.
  * When the server says the session expired, `onExpired` sends the user back
  * to the business login.
  */
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getToken, setToken, removeToken, COMPANY_TOKEN_KEY } from './secureTokens';
 import { useAction, useMutation, useQueries } from 'convex/react';
 import { getFunctionName } from 'convex/server';
 import type { FunctionArgs, FunctionReference, FunctionReturnType } from 'convex/server';
@@ -15,7 +16,7 @@ import { api } from '../convex/_generated/api';
 import { convex } from './convex';
 
 const ID_KEY = 'companyId';
-const TOKEN_KEY = 'companySessionToken';
+const TOKEN_KEY = COMPANY_TOKEN_KEY;
 
 /** Must match SESSION_EXPIRED in convex/companySession.ts. */
 const SESSION_EXPIRED = 'Your session has expired. Please log in again.';
@@ -30,10 +31,8 @@ export function isSessionExpired(err: unknown): boolean {
 // ── Storage ──
 
 export async function saveCompanySession(companyId: string, token: string) {
-  await AsyncStorage.multiSet([
-    [ID_KEY, companyId],
-    [TOKEN_KEY, token],
-  ]);
+  await AsyncStorage.setItem(ID_KEY, companyId);
+  await setToken(TOKEN_KEY, token); // Keychain / Keystore, see secureTokens.ts
 }
 
 /**
@@ -42,7 +41,8 @@ export async function saveCompanySession(companyId: string, token: string) {
  * When offline we keep the stored session; calls will re-check it.
  */
 export async function loadCompanySession(): Promise<{ companyId: string; token: string } | null> {
-  const [[, companyId], [, token]] = await AsyncStorage.multiGet([ID_KEY, TOKEN_KEY]);
+  const companyId = await AsyncStorage.getItem(ID_KEY);
+  const token = await getToken(TOKEN_KEY);
   if (!companyId || !token) {
     if (companyId) await clearCompanySession(false);
     return null;
@@ -61,10 +61,11 @@ export async function loadCompanySession(): Promise<{ companyId: string; token: 
 
 export async function clearCompanySession(revoke = true) {
   if (revoke) {
-    const token = await AsyncStorage.getItem(TOKEN_KEY);
+    const token = await getToken(TOKEN_KEY);
     if (token) convex.mutation(api.companies.logoutCompany, { sessionToken: token }).catch(() => {});
   }
-  await AsyncStorage.multiRemove([ID_KEY, TOKEN_KEY]);
+  await AsyncStorage.removeItem(ID_KEY);
+  await removeToken(TOKEN_KEY);
 }
 
 // ── Context ──

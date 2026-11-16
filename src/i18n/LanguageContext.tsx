@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getToken, PLAYER_TOKEN_KEY } from '../secureTokens';
 import { translations, Language } from './translations';
 
 const LANGUAGE_KEY = '@unlocked_language';
@@ -20,7 +21,7 @@ const LanguageContext = createContext<LanguageContextType>({
 /** Fire-and-forget language sync to Convex DB */
 async function syncLanguageToDB(lang: Language) {
   try {
-    const sessionToken = await AsyncStorage.getItem('sessionToken');
+    const sessionToken = await getToken(PLAYER_TOKEN_KEY);
     if (!sessionToken) return;
     await fetch(`${CONVEX_URL}/updateLanguage`, {
       method: 'POST',

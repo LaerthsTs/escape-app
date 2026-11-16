@@ -8,6 +8,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getToken, setToken, removeToken, PLAYER_TOKEN_KEY } from './src/secureTokens';
 import { RootStackParamList, MainTabParamList, CompanyTabParamList } from './src/types';
 import { theme } from './src/theme';
 import { convex } from './src/convex';
@@ -202,7 +203,7 @@ export default function App() {
 
   // Check for existing session on app launch
   useEffect(() => {
-    Promise.all([AsyncStorage.getItem('userId'), AsyncStorage.getItem('sessionToken')]).then(([storedUserId, storedToken]) => {
+    Promise.all([AsyncStorage.getItem('userId'), getToken(PLAYER_TOKEN_KEY)]).then(([storedUserId, storedToken]) => {
       if (storedUserId && storedToken) {
         setUserId(storedUserId);
         setSessionToken(storedToken);
@@ -232,7 +233,7 @@ export default function App() {
 
   const handleLogin = async (id: string, sessionToken: string) => {
     await AsyncStorage.setItem('userId', id);
-    await AsyncStorage.setItem('sessionToken', sessionToken);
+    await setToken(PLAYER_TOKEN_KEY, sessionToken);
     setUserId(id);
     setSessionToken(sessionToken);
     setCrashUser(id);
@@ -241,9 +242,9 @@ export default function App() {
   };
 
   const handleLogout = async () => {
-    const token = await AsyncStorage.getItem('sessionToken');
+    const token = await getToken(PLAYER_TOKEN_KEY);
     if (token) convex.mutation(api.userSession.logout, { sessionToken: token }).catch(() => {});
-    await AsyncStorage.removeItem('sessionToken');
+    await removeToken(PLAYER_TOKEN_KEY);
     await AsyncStorage.removeItem('userId');
     setUserId(null);
     setSessionToken(null);
@@ -294,7 +295,7 @@ export default function App() {
               const storedUserId = await AsyncStorage.getItem('userId');
               if (storedUserId) {
                 setUserId(storedUserId);
-                setSessionToken(await AsyncStorage.getItem('sessionToken'));
+                setSessionToken(await getToken(PLAYER_TOKEN_KEY));
                 setAppState('main');
               } else {
                 setAppState('login');
@@ -384,7 +385,7 @@ export default function App() {
               const storedUserId = await AsyncStorage.getItem('userId');
               if (storedUserId) {
                 setUserId(storedUserId);
-                setSessionToken(await AsyncStorage.getItem('sessionToken'));
+                setSessionToken(await getToken(PLAYER_TOKEN_KEY));
                 setAppState('main');
               } else {
                 setAppState('login');
@@ -422,7 +423,7 @@ export default function App() {
             const storedUserId = await AsyncStorage.getItem('userId');
             if (storedUserId) {
               setUserId(storedUserId);
-              setSessionToken(await AsyncStorage.getItem('sessionToken'));
+              setSessionToken(await getToken(PLAYER_TOKEN_KEY));
               setAppState('main');
             } else {
               setAppState('login');
@@ -455,7 +456,7 @@ export default function App() {
                 const storedUserId = await AsyncStorage.getItem('userId');
                 if (storedUserId) {
                   setUserId(storedUserId);
-                  setSessionToken(await AsyncStorage.getItem('sessionToken'));
+                  setSessionToken(await getToken(PLAYER_TOKEN_KEY));
                   setAppState('main');
                 } else {
                   setAppState('login');
@@ -468,7 +469,7 @@ export default function App() {
                 const storedUserId = await AsyncStorage.getItem('userId');
                 if (storedUserId) {
                   setUserId(storedUserId);
-                  setSessionToken(await AsyncStorage.getItem('sessionToken'));
+                  setSessionToken(await getToken(PLAYER_TOKEN_KEY));
                   setAppState('main');
                 } else {
                   setAppState('login');

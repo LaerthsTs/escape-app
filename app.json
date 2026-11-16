@@ -65,7 +65,8 @@
           "photosPermission": "Allow Unlocked to access your photos for your profile and social posts."
         }
       ],
-      "react-native-iap"
+      "react-native-iap",
+      "expo-secure-store"
     ],
     "platforms": [
       "ios",
