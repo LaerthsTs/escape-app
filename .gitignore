@@ -45,3 +45,8 @@ yarn-error.*
 # Google Play service account key (eas submit) - secret
 google-services.json
 *service-account*.json
+
+# OTA update signing: the PRIVATE key never goes to git (keep it in a password manager)
+keys/
+# ...but the public certificate must be in git (the build embeds it)
+!certs/certificate.pem
