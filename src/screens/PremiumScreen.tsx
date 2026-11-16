@@ -7,7 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../types';
-import { useQuery, useMutation } from 'convex/react';
+import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { theme } from '../theme';
 import { useUser } from '../UserContext';
@@ -49,8 +49,12 @@ export default function PremiumScreen() {
     api.premium.getStatus,
     sessionToken ? { sessionToken } : 'skip'
   );
-  const subscribeWithIAP = useMutation(api.premium.subscribeWithIAP);
-  const restoreWithIAP = useMutation(api.premium.restoreWithIAP);
+  // The server checks every purchase with Apple (convex/appStore.ts).
+  const verifyApplePurchase = useAction(api.premium.verifyApplePurchase);
+  const verifyPurchase = async (transactionId: string) => {
+    if (Platform.OS !== 'ios') throw new Error(t('premium.androidSoon'));
+    return await verifyApplePurchase({ sessionToken: sessionTokenRef.current as string, transactionId });
+  };
   const cancelPremium = useMutation(api.premium.cancel);
 
   const isPremium = premiumStatus?.isPremium ?? false;
@@ -77,18 +81,9 @@ export default function PremiumScreen() {
         if (!userIdRef.current || !currentToken) return;
 
         const receipt = extractReceiptData(purchase);
-        const plan = purchase.productId === IAP_PRODUCT_IDS.yearly ? 'yearly' : 'monthly';
 
         try {
-          await subscribeWithIAP({
-            sessionToken: currentToken,
-            plan,
-            productId: receipt.productId,
-            transactionId: receipt.transactionId,
-            transactionReceipt: receipt.transactionReceipt,
-            platform: receipt.platform,
-            purchaseToken: receipt.purchaseToken,
-          });
+          await verifyPurchase(receipt.transactionId);
 
           // Acknowledge the purchase with the store
           await acknowledgePurchase(purchase);
@@ -154,13 +149,7 @@ export default function PremiumScreen() {
       }
 
       const receipt = extractReceiptData(premiumPurchase);
-      await restoreWithIAP({
-        sessionToken: sessionToken as string,
-        productId: receipt.productId,
-        transactionId: receipt.transactionId,
-        platform: receipt.platform,
-        purchaseToken: receipt.purchaseToken,
-      });
+      await verifyPurchase(receipt.transactionId);
 
       Alert.alert(t('premium.restoreTitle'), t('premium.restoreSuccess'));
     } catch (e: any) {
