@@ -47,6 +47,7 @@ export default function Checkout() {
   const { t } = useTranslation();
   const { userId, sessionToken } = useUser();
   const createBooking = useMutation(api.bookings.create);
+  const resendLink = useMutation(api.emailVerify.resend);
   const cancelBooking = useMutation(api.bookings.cancel);
   const startCheckout = useAction(api.companyPayments.startCheckout);
   const confirmReturn = useAction(api.companyPayments.confirmReturn);
@@ -224,7 +225,22 @@ export default function Checkout() {
         await openCheckout(url);
       }
     } catch (e: any) {
-      Alert.alert(t('error'), errorText(e) || t('checkout.bookingFailed'));
+      if (errorText(e) === 'EMAIL_NOT_VERIFIED') {
+        // "Pay on arrival" needs a confirmed email (convex/emailVerify.ts)
+        Alert.alert(t('checkout.verifyEmailTitle'), t('checkout.verifyEmailMsg'), [
+          { text: t('cancel'), style: 'cancel' },
+          {
+            text: t('checkout.resendLink'),
+            onPress: () => {
+              resendLink({ sessionToken: sessionToken as string })
+                .then(() => Alert.alert(t('checkout.linkSent')))
+                .catch(() => Alert.alert(t('error'), t('checkout.bookingFailed')));
+            },
+          },
+        ]);
+      } else {
+        Alert.alert(t('error'), errorText(e) || t('checkout.bookingFailed'));
+      }
     } finally {
       setIsSubmitting(false);
     }
