@@ -139,6 +139,8 @@ export default function LoginScreen({ onLogin }: Props) {
     CODE_EXPIRED: 'login.codeExpired',
     TOO_MANY_ATTEMPTS: 'login.codeTooMany',
     EMAIL_EXISTS: 'login.emailExists',
+    NAME_RESERVED: 'login.nameReserved',
+    NAME_TOO_LONG: 'login.nameTooLong',
   };
   const signupErrorText = (err: any): string =>
     typeof err?.data === 'string' && SIGNUP_ERRORS[err.data] ? t(SIGNUP_ERRORS[err.data]) : '';
