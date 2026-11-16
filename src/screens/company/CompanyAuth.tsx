@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { theme } from '../../theme';
+import { ForgotPasswordModal } from '../../components/PasswordModals';
 import { useTranslation } from '../../i18n';
 
 interface Props {
@@ -36,6 +37,7 @@ export default function CompanyAuth({ onLogin, onBack }: Props) {
   const resendCode = useMutation(api.signupCodes.resend);
   // Step 2 of sign-up: the 6-digit code we emailed (convex/signupCodes.ts)
   const [codeStep, setCodeStep] = useState(false);
+  const [forgotVisible, setForgotVisible] = useState(false);
   const [code, setCode] = useState('');
 
   const handleLogin = async () => {
@@ -288,6 +290,11 @@ export default function CompanyAuth({ onLogin, onBack }: Props) {
           placeholderTextColor={theme.colors.textMuted}
           secureTextEntry
         />
+        {mode === 'login' && (
+          <TouchableOpacity onPress={() => setForgotVisible(true)} style={{ alignSelf: 'flex-end', marginTop: 8 }}>
+            <Text style={styles.label}>{t('password.forgot')}</Text>
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity
           style={[styles.submitBtn, loading && styles.submitBtnDisabled]}
@@ -301,6 +308,7 @@ export default function CompanyAuth({ onLogin, onBack }: Props) {
         </TouchableOpacity>
           </>
         )}
+        <ForgotPasswordModal visible={forgotVisible} kind="company" onClose={() => setForgotVisible(false)} />
       </ScrollView>
     </KeyboardAvoidingView>
   );

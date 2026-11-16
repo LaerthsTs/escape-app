@@ -17,6 +17,7 @@ import { useMutation, useAction } from 'convex/react';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { api } from '../../convex/_generated/api';
 import { theme } from '../theme';
+import { ForgotPasswordModal } from '../components/PasswordModals';
 import { EyeKeyhole } from '../components/EyeKeyhole';
 import { useTranslation } from '../i18n';
 
@@ -41,6 +42,7 @@ export default function LoginScreen({ onLogin }: Props) {
   const resendCode = useMutation(api.signupCodes.resend);
   // Step 2 of sign-up: the 6-digit code we emailed (convex/signupCodes.ts)
   const [codeStep, setCodeStep] = useState(false);
+  const [forgotVisible, setForgotVisible] = useState(false);
   const [code, setCode] = useState('');
   const loginWithAppleMutation = useAction(api.users.loginWithApple);
 
@@ -287,6 +289,12 @@ export default function LoginScreen({ onLogin }: Props) {
               </TouchableOpacity>
             </View>
 
+            {!isRegister && (
+              <TouchableOpacity onPress={() => setForgotVisible(true)} style={{ alignSelf: 'flex-end' }}>
+                <Text style={styles.toggleLink}>{t('password.forgot')}</Text>
+              </TouchableOpacity>
+            )}
+
             {isRegister && (
               <View style={styles.inputWrap}>
                 <Ionicons name="shield-checkmark-outline" size={20} color={theme.colors.textMuted} style={styles.inputIcon} />
@@ -373,6 +381,7 @@ export default function LoginScreen({ onLogin }: Props) {
               />
             </View>
           )}
+          <ForgotPasswordModal visible={forgotVisible} kind="player" onClose={() => setForgotVisible(false)} />
         </ScrollView>
       </KeyboardAvoidingView>
     </LinearGradient>

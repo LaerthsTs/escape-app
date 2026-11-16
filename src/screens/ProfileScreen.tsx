@@ -9,6 +9,7 @@ import { clearAllTokens } from '../secureTokens';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { theme } from '../theme';
+import { ChangePasswordModal } from '../components/PasswordModals';
 import { RootStackParamList } from '../types';
 import { useUser } from '../UserContext';
 import { useTranslation } from '../i18n';
@@ -27,6 +28,8 @@ export default function ProfileScreen({ onSwitchToCompany }: ProfileProps) {
   const { userId, sessionToken, onLogout } = useUser();
   const { t, language, setLanguage } = useTranslation();
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [changePwVisible, setChangePwVisible] = useState(false);
+  const changePassword = useMutation(api.passwordReset.changePlayerPassword);
   const [deletingAccount, setDeletingAccount] = useState(false);
   const user = useQuery(
     api.users.getById,
@@ -214,6 +217,7 @@ export default function ProfileScreen({ onSwitchToCompany }: ProfileProps) {
           {[
             { icon: 'diamond-outline' as const, label: premiumStatus?.isPremium ? 'UNLOCKED Premium ✦' : 'UNLOCKED Premium', action: () => navigation.navigate('Premium'), highlight: true },
             { icon: 'create-outline' as const, label: t('profile.editProfile'), action: () => setEditModalVisible(true) },
+            { icon: 'key-outline' as const, label: t('password.changeTitle'), action: () => setChangePwVisible(true) },
             { icon: 'people-outline' as const, label: t('friends.title'), action: () => navigation.navigate('Friends' as any) },
             { icon: 'trophy-outline' as const, label: t('leaderboard.title'), action: () => navigation.navigate('Leaderboard' as any) },
             { icon: 'notifications-outline' as const, label: t('profile.notifications'), action: () => navigation.navigate('NotificationPrefs' as any) },
@@ -307,6 +311,11 @@ export default function ProfileScreen({ onSwitchToCompany }: ProfileProps) {
         currentName={user.name}
         currentAvatar={user.avatar}
         currentPhone={(user as any).phone || ''}
+      />
+      <ChangePasswordModal
+        visible={changePwVisible}
+        onClose={() => setChangePwVisible(false)}
+        submit={(a) => changePassword({ sessionToken: sessionToken as string, ...a })}
       />
     </View>
   );

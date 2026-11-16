@@ -8,6 +8,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation } from 'convex/react';
 import { useCompanyMutation, useCompanyQuery } from '../../companySession';
+import { ChangePasswordModal } from '../../components/PasswordModals';
 import { api } from '../../../convex/_generated/api';
 import { theme } from '../../theme';
 import { useTranslation } from '../../i18n';
@@ -28,6 +29,8 @@ interface Props {
 export default function CompanySettings({ companyId, onLogout, onSwitchToPlayer, onNavigateBilling, onNavigatePhotos }: Props) {
   const company = useCompanyQuery(api.companies.getById, { id: companyId as Id<"companies"> });
   const updateProfile = useCompanyMutation(api.companies.updateProfile);
+  const changePassword = useCompanyMutation(api.passwordReset.changeCompanyPassword);
+  const [changePwVisible, setChangePwVisible] = useState(false);
   const { t, language, setLanguage } = useTranslation();
 
   const [activeTab, setActiveTab] = useState<TabKey>('profile');
@@ -335,6 +338,10 @@ export default function CompanySettings({ companyId, onLogout, onSwitchToPlayer,
 
             <TouchableOpacity style={[styles.saveBtn, saving && { opacity: 0.6 }]} disabled={saving} onPress={handleSave} activeOpacity={0.8}>
               <Text style={styles.saveBtnText}>{saving ? t('saving') : t('settings.saveChanges')}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={[styles.saveBtn, { marginTop: 12 }]} onPress={() => setChangePwVisible(true)} activeOpacity={0.8}>
+              <Text style={styles.saveBtnText}>{t('password.changeTitle')}</Text>
             </TouchableOpacity>
 
             {/* Subscription Plan */}
@@ -753,6 +760,11 @@ export default function CompanySettings({ companyId, onLogout, onSwitchToPlayer,
         onClose={() => setPlanModalVisible(false)}
         companyId={companyId}
         currentPlan={asPlanId(company?.platformPlan)}
+      />
+      <ChangePasswordModal
+        visible={changePwVisible}
+        onClose={() => setChangePwVisible(false)}
+        submit={(a) => changePassword(a)}
       />
     </View>
   );
