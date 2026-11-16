@@ -9,7 +9,7 @@ import { clearAllTokens } from '../secureTokens';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { theme } from '../theme';
-import { ChangePasswordModal } from '../components/PasswordModals';
+import { ChangePasswordModal, ConfirmDeleteModal } from '../components/PasswordModals';
 import { RootStackParamList } from '../types';
 import { useUser } from '../UserContext';
 import { useTranslation } from '../i18n';
@@ -29,6 +29,30 @@ export default function ProfileScreen({ onSwitchToCompany }: ProfileProps) {
   const { t, language, setLanguage } = useTranslation();
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [changePwVisible, setChangePwVisible] = useState(false);
+  const [deleteVisible, setDeleteVisible] = useState(false);
+
+  const confirmDelete = async (value: string) => {
+    const needsPassword = !!(user as any)?.hasPassword;
+    try {
+      setDeletingAccount(true);
+      const r: any = await deleteAccountMutation({
+        sessionToken: sessionToken as string,
+        ...(needsPassword ? { password: value } : { confirm: value }),
+      });
+      if (r && 'error' in r) {
+        Alert.alert(t('error'), r.error === 'WRONG_PASSWORD' ? t('password.wrongCurrent') : t('deleteConfirm.typeMismatch'));
+        return;
+      }
+      setDeleteVisible(false);
+      await AsyncStorage.clear();
+      await clearAllTokens();
+      onLogout();
+    } catch (e: any) {
+      Alert.alert(t('error'), e.message || 'Failed to delete account');
+    } finally {
+      setDeletingAccount(false);
+    }
+  };
   const changePassword = useMutation(api.passwordReset.changePlayerPassword);
   const [deletingAccount, setDeletingAccount] = useState(false);
   const user = useQuery(
@@ -238,19 +262,8 @@ export default function ProfileScreen({ onSwitchToCompany }: ProfileProps) {
                 {
                   text: t('profile.deleteAccountConfirm'),
                   style: 'destructive',
-                  onPress: async () => {
-                    try {
-                      setDeletingAccount(true);
-                      await deleteAccountMutation({ sessionToken: sessionToken as string });
-                      await AsyncStorage.clear();
-                      await clearAllTokens();
-                      onLogout();
-                    } catch (e: any) {
-                      Alert.alert(t('error'), e.message || 'Failed to delete account');
-                    } finally {
-                      setDeletingAccount(false);
-                    }
-                  },
+                  // Last step: password (or DELETE) in ConfirmDeleteModal below.
+                  onPress: () => setDeleteVisible(true),
                 },
               ]
             ), danger: true },
@@ -311,6 +324,12 @@ export default function ProfileScreen({ onSwitchToCompany }: ProfileProps) {
         currentName={user.name}
         currentAvatar={user.avatar}
         currentPhone={(user as any).phone || ''}
+      />
+      <ConfirmDeleteModal
+        visible={deleteVisible}
+        needsPassword={!!(user as any)?.hasPassword}
+        onClose={() => setDeleteVisible(false)}
+        onConfirm={confirmDelete}
       />
       <ChangePasswordModal
         visible={changePwVisible}

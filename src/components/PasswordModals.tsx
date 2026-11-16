@@ -208,3 +208,52 @@ const styles = StyleSheet.create({
   linkBtn: { alignItems: 'center', paddingVertical: 8 },
   linkText: { color: theme.colors.textMuted, fontSize: 14 },
 });
+
+/**
+ * Last step before deleting the account: the password, or typing DELETE
+ * for Apple accounts without one (convex/users.ts deleteAccount).
+ */
+export function ConfirmDeleteModal({
+  visible,
+  needsPassword,
+  onClose,
+  onConfirm,
+}: {
+  visible: boolean;
+  needsPassword: boolean;
+  onClose: () => void;
+  onConfirm: (value: string) => Promise<void>;
+}) {
+  const { t } = useTranslation();
+  const [value, setValue] = useState('');
+  const [busy, setBusy] = useState(false);
+  const close = () => {
+    setValue('');
+    onClose();
+  };
+  return (
+    <Shell visible={visible} onClose={close} title={t('profile.deleteAccountTitle')}>
+      <Text style={styles.text}>{needsPassword ? t('deleteConfirm.password') : t('deleteConfirm.typeDelete')}</Text>
+      <Field
+        value={value}
+        onChangeText={setValue}
+        placeholder={needsPassword ? t('password.current') : 'DELETE'}
+        secureTextEntry={needsPassword}
+        autoCapitalize={needsPassword ? 'none' : 'characters'}
+      />
+      <Button
+        label={t('profile.deleteAccountConfirm')}
+        disabled={busy || !value}
+        busy={busy}
+        onPress={async () => {
+          setBusy(true);
+          try {
+            await onConfirm(value);
+          } finally {
+            setBusy(false);
+          }
+        }}
+      />
+    </Shell>
+  );
+}
