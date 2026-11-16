@@ -47,7 +47,7 @@ export default function CompanySettings({ companyId, onLogout, onSwitchToPlayer,
   // Photo preset
   const photoPreset = useQuery(api.bookingPhotos.getPreset, { companyId: companyId as Id<"companies"> });
   const savePreset = useCompanyMutation(api.bookingPhotos.savePreset);
-  const generateUploadUrl = useMutation(api.companies.generateUploadUrl);
+  const generateUploadUrl = useCompanyMutation(api.companies.generateUploadUrl);
   const getUrlMutation = useMutation(api.companies.getUrlMutation);
   const [presetForm, setPresetForm] = useState({
     logoPosition: 'bottom-right' as 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'bottom-center',
@@ -145,7 +145,7 @@ export default function CompanySettings({ companyId, onLogout, onSwitchToPlayer,
 
     setPresetLogoUploading(true);
     try {
-      const uploadUrl = await generateUploadUrl();
+      const uploadUrl = await generateUploadUrl({});
       const resp = await fetch(result.assets[0].uri);
       const blob = await resp.blob();
       const res = await fetch(uploadUrl, {
@@ -177,7 +177,7 @@ export default function CompanySettings({ companyId, onLogout, onSwitchToPlayer,
 
     setOverlayUploading(true);
     try {
-      const uploadUrl = await generateUploadUrl();
+      const uploadUrl = await generateUploadUrl({});
       const resp = await fetch(result.assets[0].uri);
       const blob = await resp.blob();
       const res = await fetch(uploadUrl, {

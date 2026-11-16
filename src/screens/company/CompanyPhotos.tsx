@@ -23,7 +23,7 @@ export default function CompanyPhotos({ companyId }: Props) {
   const completedBookings = useCompanyQuery(api.bookingPhotos.getCompletedBookings, { companyId: cId });
   const photoPreset = useQuery(api.bookingPhotos.getPreset, { companyId: cId });
 
-  const generateUploadUrl = useMutation(api.companies.generateUploadUrl);
+  const generateUploadUrl = useCompanyMutation(api.companies.generateUploadUrl);
   const getUrlMutation = useMutation(api.companies.getUrlMutation);
   const addPhoto = useCompanyMutation(api.bookingPhotos.addPhoto);
   const deletePhoto = useCompanyMutation(api.bookingPhotos.deletePhoto);
@@ -70,7 +70,7 @@ export default function CompanyPhotos({ companyId }: Props) {
         const asset = result.assets[i];
 
         // Upload to Convex storage
-        const uploadUrl = await generateUploadUrl();
+        const uploadUrl = await generateUploadUrl({});
         const mime = asset.mimeType || 'image/jpeg';
         const resp = await fetch(asset.uri);
         const blob = await resp.blob();

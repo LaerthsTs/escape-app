@@ -70,7 +70,7 @@ export default function CompanyRoomEditor({ companyId }: Props) {
 
   const createRoom = useCompanyMutation(api.companies.createRoom);
   const updateRoom = useCompanyMutation(api.companies.updateRoom);
-  const generateUploadUrl = useMutation(api.companies.generateUploadUrl);
+  const generateUploadUrl = useCompanyMutation(api.companies.generateUploadUrl);
   const getUrl = useMutation(api.companies.getUrlMutation);
   const dashStats = useCompanyQuery(api.companies.getDashboardStats, {
     companyId: companyId as Id<"companies">,
@@ -129,7 +129,7 @@ export default function CompanyRoomEditor({ companyId }: Props) {
   // ── Photo Branding Preset (company-level) ──
   const photoPreset = useQuery(api.bookingPhotos.getPreset, { companyId: companyId as Id<"companies"> });
   const savePreset = useCompanyMutation(api.bookingPhotos.savePreset);
-  const generateUploadUrl2 = useMutation(api.companies.generateUploadUrl);
+  const generateUploadUrl2 = useCompanyMutation(api.companies.generateUploadUrl);
   const getUrlMutation2 = useMutation(api.companies.getUrlMutation);
   const [photoBrandingOpen, setPhotoBrandingOpen] = useState(false);
   const [presetForm, setPresetForm] = useState({
@@ -173,7 +173,7 @@ export default function CompanyRoomEditor({ companyId }: Props) {
     if (result.canceled) return;
     setPresetLogoUploading(true);
     try {
-      const uploadUrl = await generateUploadUrl2();
+      const uploadUrl = await generateUploadUrl2({});
       const resp = await fetch(result.assets[0].uri);
       const blob = await resp.blob();
       const res = await fetch(uploadUrl, { method: 'POST', headers: { 'Content-Type': result.assets[0].mimeType || 'image/jpeg' }, body: blob });
@@ -191,7 +191,7 @@ export default function CompanyRoomEditor({ companyId }: Props) {
     if (result.canceled) return;
     setOverlayUploading(true);
     try {
-      const uploadUrl = await generateUploadUrl2();
+      const uploadUrl = await generateUploadUrl2({});
       const resp = await fetch(result.assets[0].uri);
       const blob = await resp.blob();
       const res = await fetch(uploadUrl, { method: 'POST', headers: { 'Content-Type': result.assets[0].mimeType || 'image/png' }, body: blob });
@@ -561,7 +561,7 @@ export default function CompanyRoomEditor({ companyId }: Props) {
 
                   if (!result.canceled && result.assets[0]) {
                     setLoading(true);
-                    const uploadUrl = await generateUploadUrl();
+                    const uploadUrl = await generateUploadUrl({});
                     const response = await fetch(result.assets[0].uri);
                     const blob = await response.blob();
 
