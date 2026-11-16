@@ -45,7 +45,13 @@ export default function CompanyAuth({ onLogin, onBack }: Props) {
         password: password.trim(),
         client: 'app',
       });
-      if (result?._id) {
+      if ('error' in result) {
+        // Wrong email/password or locked out (see companies.loginCompany)
+        Alert.alert(
+          t('error'),
+          result.error === 'TOO_MANY_ATTEMPTS' ? t('companyAuth.tooManyAttempts') : t('companyAuth.loginFailed')
+        );
+      } else if (result?._id) {
         onLogin(result._id, result.onboardingStatus, result.sessionToken);
       }
     } catch (error: any) {
