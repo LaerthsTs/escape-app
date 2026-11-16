@@ -18,7 +18,7 @@ interface Props {
 // string as companyId instead of verifying credentials against the DB.
 // Now uses the loginCompany mutation for proper credential verification.
 export default function CompanyAuth({ onLogin, onBack }: Props) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,7 +31,12 @@ export default function CompanyAuth({ onLogin, onBack }: Props) {
   const [loading, setLoading] = useState(false);
 
   const loginMutation = useMutation(api.companies.loginCompany);
-  const registerMutation = useMutation(api.companies.register);
+  const registerMutation = useMutation(api.companies.startRegister);
+  const confirmRegister = useMutation(api.companies.confirmRegister);
+  const resendCode = useMutation(api.signupCodes.resend);
+  // Step 2 of sign-up: the 6-digit code we emailed (convex/signupCodes.ts)
+  const [codeStep, setCodeStep] = useState(false);
+  const [code, setCode] = useState('');
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -76,11 +81,37 @@ export default function CompanyAuth({ onLogin, onBack }: Props) {
         vatNumber: vatNumber.trim() || undefined,
         description: description.trim(),
         password: password.trim(),
-        client: 'app',
+        lang: language,
       });
       if (result && 'error' in result) {
-        Alert.alert('Error', result.error);
-      } else if (result && 'id' in result) {
+        Alert.alert(t('error'), result.error);
+      } else {
+        // Code emailed. The account is created after the right code.
+        setCode('');
+        setCodeStep(true);
+      }
+    } catch (err: any) {
+      Alert.alert(
+        t('error'),
+        err?.data === 'TOO_MANY_ATTEMPTS' ? t('login.codeTooMany') : t('companyAuth.registrationFailed')
+      );
+    }
+    setLoading(false);
+  };
+
+  const CODE_ERRORS: Record<string, string> = {
+    CODE_INVALID: 'login.codeInvalid',
+    CODE_EXPIRED: 'login.codeExpired',
+    TOO_MANY_ATTEMPTS: 'login.codeTooMany',
+  };
+
+  const handleConfirmCode = async () => {
+    setLoading(true);
+    try {
+      const result = await confirmRegister({ email: email.trim().toLowerCase(), code, client: 'app' });
+      if ('error' in result) {
+        Alert.alert(t('error'), CODE_ERRORS[result.error] ? t(CODE_ERRORS[result.error]) : result.error);
+      } else {
         Alert.alert(t('success'), t('companyAuth.accountCreated'), [
           { text: t('ok'), onPress: () => onLogin(result.id, 'pending_terms', result.sessionToken) },
         ]);
@@ -89,6 +120,16 @@ export default function CompanyAuth({ onLogin, onBack }: Props) {
       Alert.alert(t('error'), t('companyAuth.registrationFailed'));
     }
     setLoading(false);
+  };
+
+  const handleResendCode = async () => {
+    try {
+      await resendCode({ kind: 'company', email: email.trim().toLowerCase() });
+      setCode('');
+      Alert.alert(t('login.codeResent'));
+    } catch (err: any) {
+      Alert.alert(t('error'), err?.data === 'TOO_MANY_ATTEMPTS' ? t('login.codeTooMany') : t('companyAuth.registrationFailed'));
+    }
   };
 
   return (
@@ -119,7 +160,7 @@ export default function CompanyAuth({ onLogin, onBack }: Props) {
         <View style={styles.toggle}>
           <TouchableOpacity
             style={[styles.toggleBtn, mode === 'login' && styles.toggleBtnActive]}
-            onPress={() => setMode('login')}
+            onPress={() => { setMode('login'); setCodeStep(false); }}
           >
             <Text style={[styles.toggleText, mode === 'login' && styles.toggleTextActive]}>{t('companyAuth.signIn')}</Text>
           </TouchableOpacity>
@@ -132,6 +173,39 @@ export default function CompanyAuth({ onLogin, onBack }: Props) {
         </View>
 
         {/* Form */}
+        {codeStep ? (
+          <>
+            <Text style={styles.label}>{t('login.codeTitle')}</Text>
+            <Text style={styles.label}>{t('login.codeSent', { email: email.trim().toLowerCase() })}</Text>
+            <TextInput
+              style={[styles.input, { textAlign: 'center', fontSize: 22, letterSpacing: 8 }]}
+              value={code}
+              onChangeText={(v) => setCode(v.replace(/[^0-9]/g, '').slice(0, 6))}
+              placeholder="000000"
+              placeholderTextColor={theme.colors.textMuted}
+              keyboardType="number-pad"
+              textContentType="oneTimeCode"
+              autoComplete="one-time-code"
+              maxLength={6}
+              autoFocus
+            />
+            <TouchableOpacity
+              style={[styles.submitBtn, (loading || code.length !== 6) && styles.submitBtnDisabled]}
+              disabled={loading || code.length !== 6}
+              activeOpacity={0.8}
+              onPress={handleConfirmCode}
+            >
+              <Text style={styles.submitText}>{loading ? t('companyAuth.pleaseWait') : t('login.codeConfirm')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleResendCode} style={{ marginTop: 16, alignItems: 'center' }}>
+              <Text style={styles.label}>{t('login.codeResend')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setCodeStep(false)} style={{ marginTop: 8, alignItems: 'center' }}>
+              <Text style={styles.label}>{t('login.codeBack')}</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
         {mode === 'register' && (
           <>
             <Text style={styles.label}>{t('companyAuth.companyName')}</Text>
@@ -225,6 +299,8 @@ export default function CompanyAuth({ onLogin, onBack }: Props) {
             {loading ? t('companyAuth.pleaseWait') : mode === 'login' ? t('companyAuth.signIn') : t('companyAuth.createAccount')}
           </Text>
         </TouchableOpacity>
+          </>
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );
