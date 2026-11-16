@@ -36,7 +36,12 @@ export default function LoginScreen({ onLogin }: Props) {
   const { t, language } = useTranslation();
 
   const loginMutation = useAction(api.users.login);
-  const registerMutation = useMutation(api.users.register);
+  const startRegister = useMutation(api.users.startRegister);
+  const confirmRegister = useMutation(api.users.confirmRegister);
+  const resendCode = useMutation(api.signupCodes.resend);
+  // Step 2 of sign-up: the 6-digit code we emailed (convex/signupCodes.ts)
+  const [codeStep, setCodeStep] = useState(false);
+  const [code, setCode] = useState('');
   const loginWithAppleMutation = useAction(api.users.loginWithApple);
 
   useEffect(() => {
@@ -103,14 +108,15 @@ export default function LoginScreen({ onLogin }: Props) {
     setLoading(true);
     try {
       if (isRegister) {
-        const { userId, sessionToken } = await registerMutation({
+        await startRegister({
           name: name.trim(),
           email: email.trim().toLowerCase(),
           password,
           lang: language,
-          client: 'app',
         });
-        onLogin(userId, sessionToken);
+        // Code emailed: ask for it. The account is created after that.
+        setCode('');
+        setCodeStep(true);
       } else {
         const { userId, sessionToken } = await loginMutation({
           email: email.trim().toLowerCase(),
@@ -120,9 +126,44 @@ export default function LoginScreen({ onLogin }: Props) {
         onLogin(userId, sessionToken);
       }
     } catch (err: any) {
+      Alert.alert(t('error'), signupErrorText(err) || err.message || t('login.somethingWentWrong'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const SIGNUP_ERRORS: Record<string, string> = {
+    CODE_INVALID: 'login.codeInvalid',
+    CODE_EXPIRED: 'login.codeExpired',
+    TOO_MANY_ATTEMPTS: 'login.codeTooMany',
+    EMAIL_EXISTS: 'login.emailExists',
+  };
+  const signupErrorText = (err: any): string =>
+    typeof err?.data === 'string' && SIGNUP_ERRORS[err.data] ? t(SIGNUP_ERRORS[err.data]) : '';
+
+  const handleConfirmCode = async () => {
+    setLoading(true);
+    try {
+      const r = await confirmRegister({ email: email.trim().toLowerCase(), code, client: 'app' });
+      if ('error' in r) {
+        Alert.alert(t('error'), t(SIGNUP_ERRORS[r.error] ?? 'login.somethingWentWrong'));
+        return;
+      }
+      onLogin(r.userId, r.sessionToken);
+    } catch (err: any) {
       Alert.alert(t('error'), err.message || t('login.somethingWentWrong'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    try {
+      await resendCode({ kind: 'player', email: email.trim().toLowerCase() });
+      setCode('');
+      Alert.alert(t('login.codeResent'));
+    } catch (err: any) {
+      Alert.alert(t('error'), signupErrorText(err) || t('login.somethingWentWrong'));
     }
   };
 
@@ -149,6 +190,54 @@ export default function LoginScreen({ onLogin }: Props) {
           </View>
 
           {/* Form */}
+          {codeStep ? (
+          <View style={styles.form}>
+            <Text style={styles.appSubtitle}>{t('login.codeTitle')}</Text>
+            <Text style={styles.legalNotice}>{t('login.codeSent', { email: email.trim().toLowerCase() })}</Text>
+            <View style={styles.inputWrap}>
+              <Ionicons name="keypad-outline" size={20} color={theme.colors.textMuted} style={styles.inputIcon} />
+              <TextInput
+                style={[styles.input, { letterSpacing: 8, fontSize: 22 }]}
+                placeholder="000000"
+                placeholderTextColor={theme.colors.textMuted}
+                value={code}
+                onChangeText={(v) => setCode(v.replace(/[^0-9]/g, '').slice(0, 6))}
+                keyboardType="number-pad"
+                textContentType="oneTimeCode"
+                autoComplete="one-time-code"
+                maxLength={6}
+                autoFocus
+              />
+            </View>
+            <TouchableOpacity
+              style={[styles.submitBtn, (loading || code.length !== 6) && styles.submitBtnDisabled]}
+              onPress={handleConfirmCode}
+              disabled={loading || code.length !== 6}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={[theme.colors.redPrimary, '#8B0000']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.submitGradient}
+              >
+                {loading ? (
+                  <ActivityIndicator color={theme.colors.bone} />
+                ) : (
+                  <Text style={styles.submitText}>{t('login.codeConfirm')}</Text>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+            <View style={styles.toggleSection}>
+              <TouchableOpacity onPress={() => setCodeStep(false)}>
+                <Text style={styles.toggleText}>{t('login.codeBack')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleResendCode}>
+                <Text style={styles.toggleLink}>{t('login.codeResend')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          ) : (
           <View style={styles.form}>
             {isRegister && (
               <View style={styles.inputWrap}>
@@ -246,6 +335,7 @@ export default function LoginScreen({ onLogin }: Props) {
               </LinearGradient>
             </TouchableOpacity>
           </View>
+          )}
 
           {/* Toggle */}
           <View style={styles.toggleSection}>
@@ -255,6 +345,7 @@ export default function LoginScreen({ onLogin }: Props) {
             <TouchableOpacity
               onPress={() => {
                 setIsRegister(!isRegister);
+                setCodeStep(false);
                 setPassword('');
                 setConfirmPassword('');
               }}
