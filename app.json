@@ -22,7 +22,8 @@
           "remote-notification"
         ],
         "NSLocationWhenInUseUsageDescription": "We use your location to show nearby escape rooms.",
-        "NSPhotoLibraryUsageDescription": "Upload photos for your profile and social posts."
+        "NSPhotoLibraryUsageDescription": "Upload photos for your profile and social posts.",
+        "NSLocationDefaultAccuracyReduced": true
       },
       "config": {
         "usesNonExemptEncryption": false
@@ -37,12 +38,14 @@
       "versionCode": 1,
       "useNextNotificationsApi": true,
       "permissions": [
-        "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.READ_MEDIA_IMAGES",
         "android.permission.VIBRATE",
-        "android.permission.RECEIVE_BOOT_COMPLETED",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECEIVE_BOOT_COMPLETED"
+      ],
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_FINE_LOCATION"
       ]
     },
     "plugins": [
