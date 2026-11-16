@@ -13,7 +13,8 @@
       "channel": "development",
       "env": {
         "EXPO_PUBLIC_APP_ENV": "development"
-      }
+      },
+      "environment": "development"
     },
     "preview": {
       "distribution": "internal",
@@ -23,14 +24,16 @@
       "channel": "preview",
       "env": {
         "EXPO_PUBLIC_APP_ENV": "preview"
-      }
+      },
+      "environment": "preview"
     },
     "production": {
       "autoIncrement": true,
       "channel": "production",
       "env": {
         "EXPO_PUBLIC_APP_ENV": "production"
-      }
+      },
+      "environment": "production"
     }
   },
   "submit": {

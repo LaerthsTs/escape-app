@@ -4,7 +4,10 @@ const convexUrl = process.env.EXPO_PUBLIC_CONVEX_URL!;
 
 if (!convexUrl) {
   throw new Error(
-    "Missing EXPO_PUBLIC_CONVEX_URL in .env — copy .env.example to .env and set your Convex URL"
+    // Local: .env (copy .env.example). EAS builds: set EXPO_PUBLIC_CONVEX_URL
+    // per environment (development / preview / production) on expo.dev,
+    // see "environment" in eas.json.
+    "Missing EXPO_PUBLIC_CONVEX_URL — set it in .env (local) or in the EAS environment for this build profile"
   );
 }
 
